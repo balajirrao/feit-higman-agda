@@ -30,7 +30,7 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   last-but-one (chain-ext {e₀} {e₁} {e₂} c x) = e₁
 
   data irred : {e f : O} → chain e f → Set where
-    irred-inc : ∀ {e f} → (e ≡ f → ⊥) → (e#f : e # f) → irred (chain-inc e#f)
+    irred-inc : ∀ {e f} → (e≠f : e ≡ f → ⊥) → (e#f : e # f) → irred (chain-inc e#f)
     irred-ext : ∀ {e₀ e₁ e₂} → (c : chain e₀ e₁) → irred c →
                   (e₁#e₂ : e₁ # e₂) → ((last-but-one c) # e₂ → ⊥) →
                   irred (chain-ext c e₁#e₂)
