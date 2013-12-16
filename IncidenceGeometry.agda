@@ -57,6 +57,6 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
     
   -- Since we are dealing with finite objects here we assume that a shortest chain always exists
   postulate
-    shortest-chain : (e f : O) → chain e f
-    shortest-chain-is-shortest : ∀ {e f} → {c : chain e f} →
-                                   (len (shortest-chain e f) ≤ len c)
+    _≫_ : (e f : O) → chain e f
+    ≫-shortest : ∀ {e f} → {c : chain e f} →
+                                   (len (e ≫ f) ≤ len c)
