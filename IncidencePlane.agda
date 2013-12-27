@@ -1,5 +1,5 @@
 
-module IncidencePlane where
+module IncidencePlane (P L : Set) where
   open import Data.Bool using (Bool; true; false)
   open import Data.Nat
   open import Data.Unit using (⊤)
@@ -9,10 +9,6 @@ module IncidencePlane where
     Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; subst₂; sym; trans; _≢_)
   open import Data.Sum using (_⊎_) renaming (inj₁ to injP; inj₂ to injL)
   open import Data.Maybe
-  
-  postulate
-    P : Set
-    L : Set
 
   O : Set
   O = P ⊎ L
