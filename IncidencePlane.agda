@@ -65,18 +65,18 @@ module IncidencePlane where
   irred-PP-even : ∀ {p p'} → (c : chain (injP p) (injP p')) → irred c → Even (len c)
   irred-PL-odd : ∀ {p l} → (c : chain (injP p) (injL l)) → irred c → Odd (len c)
 
-  irred-PP-even IG.[] ic = evenZero
-  irred-PP-even (c IG.∷ e#f) ic with (fst e#f)
-  irred-PP-even (IG.[] IG.∷ e#f) ic | injP x = ⊥-elim (ic (cong injP (eq-#-P e#f)))
-  irred-PP-even (c IG.∷ e#f IG.∷ e#f₁) ic | injP x = ⊥-elim (proj₁ ic (subst (λ m → fst e#f # m) (cong injP (eq-#-P e#f₁)) e#f))
-  irred-PP-even (c IG.∷ e#f) ic | injL y = oddEven (irred-PL-odd c (irred-init (c ∷ e#f) (λ ()) ic))
+  irred-PP-even [] ic = evenZero
+  irred-PP-even (c ∷ e#f) ic with (fst e#f)
+  irred-PP-even ([] ∷ e#f) ic | injP x = ⊥-elim (ic (cong injP (eq-#-P e#f)))
+  irred-PP-even (c ∷ e#f ∷ e#f₁) ic | injP x = ⊥-elim (proj₁ ic (subst (λ m → fst e#f # m) (cong injP (eq-#-P e#f₁)) e#f))
+  irred-PP-even (c ∷ e#f) ic | injL y = oddEven (irred-PL-odd c (irred-init (c ∷ e#f) (λ ()) ic))
 
-  irred-PL-odd (IG.[] IG.∷ e#f) _ = oddOne
-  irred-PL-odd (c IG.∷ e#f IG.∷ e#f₁) ic with (last c)
-  irred-PL-odd (c IG.∷ e#f IG.∷ e#f₁) ic | injP x with (snd e#f)
-  irred-PL-odd (c IG.∷ e#f IG.∷ e#f₁) ic | injP x₁ | injP x = ⊥-elim (proj₁ ic (subst (λ m → m # snd e#f₁) (cong injP (eq-#-P (#-sym e#f))) e#f₁))
-  irred-PL-odd (c IG.∷ e#f IG.∷ e#f₁) ic | injP x | injL y = ⊥-elim (proj₁ ic (subst (λ m → fst e#f # m) (cong injL (eq-#-L e#f₁)) e#f))
-  irred-PL-odd (c IG.∷ e#f IG.∷ e#f₁) ic | injL y = oddSuc (irred-PL-odd c (irred-init (c IG.∷ e#f) (λ ()) (proj₂ ic)))
+  irred-PL-odd ([] ∷ e#f) _ = oddOne
+  irred-PL-odd (c ∷ e#f ∷ e#f₁) ic with (last c)
+  irred-PL-odd (c ∷ e#f ∷ e#f₁) ic | injP x with (snd e#f)
+  irred-PL-odd (c ∷ e#f ∷ e#f₁) ic | injP x₁ | injP x = ⊥-elim (proj₁ ic (subst (λ m → m # snd e#f₁) (cong injP (eq-#-P (#-sym e#f))) e#f₁))
+  irred-PL-odd (c ∷ e#f ∷ e#f₁) ic | injP x | injL y = ⊥-elim (proj₁ ic (subst (λ m → fst e#f # m) (cong injL (eq-#-L e#f₁)) e#f))
+  irred-PL-odd (c ∷ e#f ∷ e#f₁) ic | injL y = oddSuc (irred-PL-odd c (irred-init (c ∷ e#f) (λ ()) (proj₂ ic)))
 
   shortest-PP-even : ∀ {p p'} → (c : chain (injP p) (injP p')) → shortest c → Even (len c)
   shortest-PP-even c sc = irred-PP-even c (shortest-irred c sc)
