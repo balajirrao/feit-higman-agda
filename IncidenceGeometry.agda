@@ -86,6 +86,14 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   len-rev {.f} {f} [ .f ] = refl
   len-rev {e} {f} (c ∷ .f) rewrite  (len-rev c) = ++-len ([ f ] ∷ last c) (rev c)
 
+  -- Second element of the chain
+  second : ∀ {e f} → (c : chain e f) → (ne : (len c) ≢ 0) → O
+  second {e} {f} c p rewrite (len-rev c) = last-but-one (rev c) p
+
+  -- tail of the chain
+  tail : ∀ {e f} (c : chain e f) → (ne : (len c) ≢ 0) → (chain (second c ne) f)
+  tail c p rewrite (len-rev c) = rev (init (rev c) p)
+
   infixl 3 _∈_
 
   _∈_ : ∀ {e f} → O → chain e f → Set
