@@ -153,6 +153,13 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   shortest-irred (([ e ] ∷ _) {p}) s = sh-irred-helper p s
   shortest-irred {e} ((c ∷ g ∷ h) {g#h}) s = (λ t → s ((c ∷ h) {t}) (m≤m)) , shortest-irred (c ∷ g) (λ c' z → s ((c' ∷ h) {g#h}) (s≤s z))
 
+  len-init-suc : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → (len c) ≡ suc (len (init c ne))
+  len-init-suc {.f} {f} [ .f ] ne = ⊥-elim (ne refl)
+  len-init-suc {e} {f} (c ∷ .f) ne = refl
+    
+  rev-nonempty : ∀ {e f} → (c : chain e f) → nonempty c → nonempty (rev c)
+  rev-nonempty c p rewrite (len-rev c) = p
 
-
+  len-tail-suc : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → (len c) ≡ suc (len (tail c ne))
+  len-tail-suc c p rewrite (len-rev c) | sym (len-rev (init (rev c) p )) = len-init-suc (rev c) p
 
