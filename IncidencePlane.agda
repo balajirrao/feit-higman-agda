@@ -9,6 +9,8 @@ module IncidencePlane where
     Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; subst₂; sym; trans; _≢_)
   open import Data.Sum using (_⊎_) renaming (inj₁ to injP; inj₂ to injL)
   open import Data.Maybe
+
+  open import Relation.Nullary.Core
  
   --private
   postulate
@@ -104,4 +106,17 @@ module IncidencePlane where
     nondegen : ∀ {e f} → Set
     nondegen {e} {f} = ∃ {A = chain e f} (λ c → shortest c × (len c) ≡ n)
 
+    closed-even : ∀ {e} → (c : chain e e) → irred c → Even (len c)
+    closed-even {injP x} c = irred-PP-even c
+    closed-even {injL y} c = irred-LL-even c    
+
+    mid : ∀ {e f} → (c : chain e f) → Even (len c) → O
+    mid {.f} {f} IG.[ .f ] p = f
+    mid ([ _ ] ∷ _) (oddEven ())
+    mid ([ e ] ∷ f ∷ g ) p = f
+    mid (c ∷ g) (oddEven p) with (len c ≟ 0)
+    mid (c IG.∷ g) (oddEven p₂) | yes p with (len c) | p
+    mid (c IG.∷ g) (oddEven ()) | yes p | .0 | refl
+    mid (c IG.∷ g) (oddEven p₁) | no ¬p with (len c) | (len-init-suc c ¬p)
+    mid (c IG.∷ g) (oddEven (evenOdd x)) | no ¬p | .(suc (IG.len (P ⊎ L) _#_ (IG.init (P ⊎ L) _#_ c ¬p))) | refl = mid (init c ¬p) x
 
