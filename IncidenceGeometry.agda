@@ -39,11 +39,14 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   len [ _ ] = zero
   len (c ∷ _) = suc (len c)
 
-  last-but-one : ∀ {e f} → (c : chain e f) → (ne : len c ≢ 0) → O
+  nonempty : ∀ {e f} → chain e f → Set
+  nonempty c = (len c ≢ 0)
+
+  last-but-one : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → O
   last-but-one [ _ ] ne = ⊥-elim (ne refl)
   last-but-one (c ∷ _) _ = last c
 
-  init : ∀ {e f} (c : chain e f) → (ne : len c ≢ zero) → chain e (last-but-one c ne)
+  init : ∀ {e f} (c : chain e f) → (ne : nonempty c) → chain e (last-but-one c ne)
   init [ _ ] ne = ⊥-elim (ne refl)
   init (c ∷ _) _ = c
 
@@ -87,11 +90,11 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   len-rev {e} {f} (c ∷ .f) rewrite  (len-rev c) = ++-len ([ f ] ∷ last c) (rev c)
 
   -- Second element of the chain
-  second : ∀ {e f} → (c : chain e f) → (ne : (len c) ≢ 0) → O
+  second : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → O
   second {e} {f} c p rewrite (len-rev c) = last-but-one (rev c) p
 
   -- tail of the chain
-  tail : ∀ {e f} (c : chain e f) → (ne : (len c) ≢ 0) → (chain (second c ne) f)
+  tail : ∀ {e f} (c : chain e f) → (ne : nonempty c) → (chain (second c ne) f)
   tail c p rewrite (len-rev c) = rev (init (rev c) p)
 
   infixl 3 _∈_
