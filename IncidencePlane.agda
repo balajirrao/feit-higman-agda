@@ -89,3 +89,19 @@ module IncidencePlane where
 
   shortest-PL-odd : ∀ {p l} → (c : chain (injP p) (injL l)) → shortest c → Odd (len c)
   shortest-PL-odd c sc = irred-PL-odd c (shortest-irred c sc)
+
+  module GenPolygon (n : ℕ) where
+    postulate
+      A₁ : ∀ (e f : O) → ∃ {A = chain e f} (λ c → (len  c) ≤ n)
+      A₂ : ∀ (e f : O) → Maybe (∃! {A = chain e f} _≡_ (λ c → irred c × len c < n)) 
+  
+    open Data.Nat.≤-Reasoning
+ 
+    len-shortest-≤n : ∀ {e f} → (c : chain e f) → shortest c → len c > n → ⊥
+    len-shortest-≤n {e} {f} c sc l with proj₁ (A₁ e f) | proj₂(A₁ e f) 
+    ... | c' | p  = sc c' (begin suc (len c') ≤⟨ s≤s p ⟩ (relTo l))
+
+    nondegen : ∀ {e f} → Set
+    nondegen {e} {f} = ∃ {A = chain e f} (λ c → shortest c × (len c) ≡ n)
+
+
