@@ -40,14 +40,15 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   len (c ∷ _) = suc (len c)
 
   nonempty : ∀ {e f} → chain e f → Set
-  nonempty c = (len c ≢ 0)
+  nonempty [ _ ] = ⊥
+  nonempty (_ ∷ _) = ⊤
 
   last-but-one : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → O
-  last-but-one [ _ ] ne = ⊥-elim (ne refl)
+  last-but-one [ _ ] ne = ⊥-elim ne
   last-but-one (c ∷ _) _ = last c
 
   init : ∀ {e f} (c : chain e f) → (ne : nonempty c) → chain e (last-but-one c ne)
-  init [ _ ] ne = ⊥-elim (ne refl)
+  init [ _ ] ne = ⊥-elim ne
   init (c ∷ _) _ = c
 
   infixl 5 _++_ 
@@ -56,6 +57,10 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   (c₁ ++ [ _ ])  = c₁
   (c₁ ++ (c₂ ∷ e) {p}) = (c₁ ++ c₂ ∷ e) {p}
  
+  ++-nonempty : ∀ {e f g} → (c₁ : chain e f) → (c₂ : chain f g) → (nonempty c₁) → (nonempty (c₁ ++ c₂))
+  ++-nonempty {e} {.g} {g} c₁ [ .g ] p = p
+  ++-nonempty {e} {f} {g} c₁ (c₂ ∷ .g) p₁ = Data.Unit.tt
+
   ++-[] : ∀ {e f} → (c : chain e f) → [ e ] ++ c ≡ c
   ++-[] [ _ ] = refl
   ++-[] ((c ∷ e#f)) rewrite (++-[] c) = refl
@@ -89,13 +94,17 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   len-rev {.f} {f} [ .f ] = refl
   len-rev {e} {f} (c ∷ .f) rewrite  (len-rev c) = ++-len ([ f ] ∷ last c) (rev c)
 
+  rev-nonempty : ∀ {e f} → (c : chain e f) → nonempty c → nonempty (rev c)
+  rev-nonempty {.f} {f} [ .f ] p = p
+  rev-nonempty {e} {f} (c ∷ .f) p₁ = ++-nonempty ([ f ] ∷ (last c)) (rev c) Data.Unit.tt
+
   -- Second element of the chain
   second : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → O
-  second {e} {f} c p rewrite (len-rev c) = last-but-one (rev c) p
+  second {e} {f} c p rewrite (len-rev c) = last-but-one (rev c) (rev-nonempty c p)
 
   -- tail of the chain
   tail : ∀ {e f} (c : chain e f) → (ne : nonempty c) → (chain (second c ne) f)
-  tail c p rewrite (len-rev c) = rev (init (rev c) p)
+  tail c p rewrite (len-rev c) = rev (init (rev c) (rev-nonempty c p))
 
   infixl 3 _∈_
 
@@ -126,8 +135,8 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   irred-++ {h} e f .f₁ x (_∷_ {.f₁} {f₁} [ .f₁ ] .h) x₁ = proj₁ x₁ , x
   irred-++ {h} e f g x (_∷_ {.g} {f₁} (c ∷ .f₁) .h) x₁ = proj₁ x₁ , irred-++ e f g x (c ∷ f₁) (proj₂ x₁)
 
-  irred-init : ∀ {e f} → (c : chain e f) → (ne : len c ≢ zero) → irred c → irred (init c ne)
-  irred-init [ _ ] ne ic = ⊥-elim (ne refl)
+  irred-init : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → irred c → irred (init c ne)
+  irred-init [ _ ] ne ic = ⊥-elim ne
   irred-init (c ∷ e#f) _ ic with c
   irred-init (c ∷ e#f) ne ic | [ _ ] = Data.Unit.tt
   irred-init (c ∷ e#f₁) ne ic | c' ∷ e#f = proj₂ ic  
@@ -154,12 +163,11 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   shortest-irred {e} ((c ∷ g ∷ h) {g#h}) s = (λ t → s ((c ∷ h) {t}) (m≤m)) , shortest-irred (c ∷ g) (λ c' z → s ((c' ∷ h) {g#h}) (s≤s z))
 
   len-init-suc : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → (len c) ≡ suc (len (init c ne))
-  len-init-suc {.f} {f} [ .f ] ne = ⊥-elim (ne refl)
+  len-init-suc {.f} {f} [ .f ] ne = ⊥-elim ne
   len-init-suc {e} {f} (c ∷ .f) ne = refl
-    
-  rev-nonempty : ∀ {e f} → (c : chain e f) → nonempty c → nonempty (rev c)
-  rev-nonempty c p rewrite (len-rev c) = p
+   
+--  len-tail-suc : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → (len c) ≡ suc (len (tail c ne))
+--  len-tail-suc c p rewrite (len-rev c) | sym (len-rev (init (rev c) p )) = len-init-suc (rev c) p
 
-  len-tail-suc : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → (len c) ≡ suc (len (tail c ne))
-  len-tail-suc c p rewrite (len-rev c) | sym (len-rev (init (rev c) p )) = len-init-suc (rev c) p
+
 

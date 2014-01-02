@@ -2,7 +2,7 @@
 module IncidencePlane where
   open import Data.Bool using (Bool; true; false)
   open import Data.Nat
-  open import Data.Unit using (⊤)
+  open import Data.Unit using (⊤; tt)
   open import Data.Empty using (⊥; ⊥-elim)
   open import Data.Product
   open import
@@ -74,16 +74,16 @@ module IncidencePlane where
   irred-PP-even [ ._ ] _ = evenZero
   irred-PP-even (c ∷ ._) ic with (last c)
   irred-PP-even {p} {p'} ((c IG.∷ .(injP p')) {q}) ic | injP x = ⊥-elim (irred-∷ c (injP p') ic (cong injP (eq-#-P q)))
-  irred-PP-even {p} {p'} (c IG.∷ .(injP p')) ic | injL y = oddEven (irred-PL-odd c (irred-init (c IG.∷ injP p') (λ ()) ic))
+  irred-PP-even {p} {p'} (c IG.∷ .(injP p')) ic | injL y = oddEven (irred-PL-odd c (irred-init (c IG.∷ injP p') tt ic))
 
   irred-PL-odd {p} {l} (c IG.∷ .(injL l)) x with (last c)
-  irred-PL-odd {p} {l} (c IG.∷ .(injL l)) x₁ | injP x = evenOdd (irred-PP-even c (irred-init (c IG.∷ injL l) (λ ()) x₁))
+  irred-PL-odd {p} {l} (c IG.∷ .(injL l)) x₁ | injP x = evenOdd (irred-PP-even c (irred-init (c IG.∷ injL l) tt x₁))
   irred-PL-odd {p} {l} ((c IG.∷ .(injL l)) {q}) x | injL y = ⊥-elim (irred-∷ c (injL l) x (cong injL (eq-#-L q)))
 
   irred-LL-even : ∀ {l l'} → (c : chain (injL l) (injL l')) → irred c → Even (len c)
   irred-LL-even {.l'} {l'} IG.[ .(injL l') ] x = evenZero
   irred-LL-even {l} {l'} (c IG.∷ .(injL l')) x with (last c)
-  irred-LL-even {l} {l'} (c IG.∷ .(injL l')) x₁ | injP x rewrite (len-rev c) = oddEven (irred-PL-odd (rev c) (irred-rev c (irred-init (c IG.∷ injL l') (λ ()) x₁)))
+  irred-LL-even {l} {l'} (c IG.∷ .(injL l')) x₁ | injP x rewrite (len-rev c) = oddEven (irred-PL-odd (rev c) (irred-rev c (irred-init (c IG.∷ injL l')  tt x₁)))
   irred-LL-even {l} {l'} ((c IG.∷ .(injL l')) {q}) x | injL y = ⊥-elim (irred-∷ c (injL l') x (cong injL (eq-#-L q)))
  
   shortest-PP-even : ∀ {p p'} → (c : chain (injP p) (injP p')) → shortest c → Even (len c)
@@ -111,12 +111,7 @@ module IncidencePlane where
     closed-even {injL y} c = irred-LL-even c    
 
     mid : ∀ {e f} → (c : chain e f) → Even (len c) → O
-    mid {.f} {f} IG.[ .f ] p = f
-    mid ([ _ ] ∷ _) (oddEven ())
-    mid ([ e ] ∷ f ∷ g ) p = f
-    mid (c ∷ g) (oddEven p) with (len c ≟ 0)
-    mid (c IG.∷ g) (oddEven p₂) | yes p with (len c) | p
-    mid (c IG.∷ g) (oddEven ()) | yes p | .0 | refl
-    mid (c IG.∷ g) (oddEven p₁) | no ¬p with (len c) | (len-init-suc c ¬p)
-    mid (c IG.∷ g) (oddEven (evenOdd x)) | no ¬p | .(suc (IG.len (P ⊎ L) _#_ (IG.init (P ⊎ L) _#_ c ¬p))) | refl = mid (init c ¬p) x
-
+    mid [ e ] p = e
+    mid (IG.[ e ] IG.∷ f) (oddEven ())
+    mid ([ e ] ∷ f ∷ g) p = f
+    mid (((c ∷ f) {c#f}) ∷ g) (oddEven (evenOdd p)) = mid (init ((c ∷ f) {c#f}) tt) p
