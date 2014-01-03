@@ -1,4 +1,3 @@
-
 module IncidencePlane where
   open import Data.Bool using (Bool; true; false)
   open import Data.Nat
@@ -7,7 +6,7 @@ module IncidencePlane where
   open import Data.Product
   open import
     Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; subst₂; sym; trans; _≢_)
-  open import Data.Sum using (_⊎_) renaming (inj₁ to injP; inj₂ to injL)
+  open import Data.Sum using (_⊎_; inj₁; inj₂)
   open import Data.Maybe
 
   open import Relation.Nullary.Core
@@ -20,19 +19,19 @@ module IncidencePlane where
   O = P ⊎ L
  
   isP : O → Bool
-  isP (injP x) = true
-  isP (injL y) = false
+  isP (inj₁ x) = true
+  isP (inj₂ y) = false
 
   isL : O → Bool
-  isL (injP x) = false
-  isL (injL y) = true
+  isL (inj₁ x) = false
+  isL (inj₂ y) = true
 
   infix 3 _#_
   
   postulate
     _#_ : O → O → Set
-    eq-#-P : {e f : P} → .((injP e) # (injP f)) → e ≡ f
-    eq-#-L : {e f : L} → .((injL e) # (injL f)) → e ≡ f
+    eq-#-P : {e f : P} → .((inj₁ e) # (inj₁ f)) → e ≡ f
+    eq-#-L : {e f : L} → .((inj₂ e) # (inj₂ f)) → e ≡ f
 
   import IncidenceGeometry as IG
   open IG O _#_
@@ -64,32 +63,35 @@ module IncidencePlane where
 
     aa : ∀ x → Even x → Odd x → ⊥
     aa zero e ()
-    aa (suc x) (oddEven x₁) (evenOdd x₂) = aa x x₂ x₁
+    aa (suc x) (oddEven p) (evenOdd q) = aa x q p
 
   open EvenOdd
  
-  irred-PP-even : ∀ {p p'} → (c : chain (injP p) (injP p')) → irred c → Even (len c)
-  irred-PL-odd : ∀ {p l} → (c : chain (injP p) (injL l)) → irred c → Odd (len c)
+  irred-PP-even : ∀ {p p'} → (c : chain (inj₁ p) (inj₁ p')) → irred c → Even (len c)
+  irred-PL-odd : ∀ {p l} → (c : chain (inj₁ p) (inj₂ l)) → irred c → Odd (len c)
 
   irred-PP-even [ ._ ] _ = evenZero
-  irred-PP-even (c ∷ ._) ic with (last c)
-  irred-PP-even {p} {p'} ((c IG.∷ .(injP p')) {q}) ic | injP x = ⊥-elim (irred-∷ c (injP p') ic (cong injP (eq-#-P q)))
-  irred-PP-even {p} {p'} (c IG.∷ .(injP p')) ic | injL y = oddEven (irred-PL-odd c (irred-init (c IG.∷ injP p') tt ic))
+  irred-PP-even {_} {p} ((c ∷ .(inj₁ p)) {q}) ic with (last c)
+  ... | inj₁ x = ⊥-elim (irred-∷ c (inj₁ p) ic (cong inj₁ (eq-#-P q)))
+  ... | inj₂ y = oddEven (irred-PL-odd c (irred-init (c ∷ inj₁ p) tt ic))
 
-  irred-PL-odd {p} {l} (c IG.∷ .(injL l)) x with (last c)
-  irred-PL-odd {p} {l} (c IG.∷ .(injL l)) x₁ | injP x = evenOdd (irred-PP-even c (irred-init (c IG.∷ injL l) tt x₁))
-  irred-PL-odd {p} {l} ((c IG.∷ .(injL l)) {q}) x | injL y = ⊥-elim (irred-∷ c (injL l) x (cong injL (eq-#-L q)))
+  irred-PL-odd {_} {l} ((c ∷ .(inj₂ l)) {q}) ic with (last c)
+  ... | inj₁ _ = evenOdd (irred-PP-even c (irred-init (c ∷ inj₂ l) tt ic))
+  ... | inj₂ y = ⊥-elim (irred-∷ c (inj₂ l) ic (cong inj₂ (eq-#-L q)))
 
-  irred-LL-even : ∀ {l l'} → (c : chain (injL l) (injL l')) → irred c → Even (len c)
-  irred-LL-even {.l'} {l'} IG.[ .(injL l') ] x = evenZero
-  irred-LL-even {l} {l'} (c IG.∷ .(injL l')) x with (last c)
-  irred-LL-even {l} {l'} (c IG.∷ .(injL l')) x₁ | injP x rewrite (len-rev c) = oddEven (irred-PL-odd (rev c) (irred-rev c (irred-init (c IG.∷ injL l')  tt x₁)))
-  irred-LL-even {l} {l'} ((c IG.∷ .(injL l')) {q}) x | injL y = ⊥-elim (irred-∷ c (injL l') x (cong injL (eq-#-L q)))
+  irred-LL-even : ∀ {l l'} → (c : chain (inj₂ l) (inj₂ l')) → irred c → Even (len c)
+  irred-LL-even [ .(inj₂ _) ] x = evenZero
+  irred-LL-even {_} {l'} ((c ∷ .(inj₂ l')) {q} ) ic with (last c)
+  ... | inj₁ _ rewrite (len-rev c) = oddEven (irred-PL-odd (rev c) 
+                                      (irred-rev c (irred-init (c ∷ inj₂ l')  tt ic)))
+  ... | inj₂ _ = ⊥-elim (irred-∷ c (inj₂ l') ic (cong inj₂ (eq-#-L q)))
  
-  shortest-PP-even : ∀ {p p'} → (c : chain (injP p) (injP p')) → shortest c → Even (len c)
+  shortest-PP-even : ∀ {p p'} → (c : chain (inj₁ p) (inj₁ p')) →
+                       shortest c → Even (len c)
   shortest-PP-even c sc = irred-PP-even c (shortest-irred c sc)
 
-  shortest-PL-odd : ∀ {p l} → (c : chain (injP p) (injL l)) → shortest c → Odd (len c)
+  shortest-PL-odd : ∀ {p l} → (c : chain (inj₁ p) (inj₂ l)) →
+                      shortest c → Odd (len c)
   shortest-PL-odd c sc = irred-PL-odd c (shortest-irred c sc)
 
   module GenPolygon (n : ℕ) where
@@ -107,11 +109,11 @@ module IncidencePlane where
     nondegen {e} {f} = ∃ {A = chain e f} (λ c → shortest c × (len c) ≡ n)
 
     closed-even : ∀ {e} → (c : chain e e) → irred c → Even (len c)
-    closed-even {injP x} c = irred-PP-even c
-    closed-even {injL y} c = irred-LL-even c    
+    closed-even {inj₁ _} c = irred-PP-even c
+    closed-even {inj₂ _} c = irred-LL-even c    
 
     mid : ∀ {e f} → (c : chain e f) → Even (len c) → O
     mid [ e ] p = e
-    mid (IG.[ e ] IG.∷ f) (oddEven ())
+    mid ([ e ] ∷ f) (oddEven ())
     mid ([ e ] ∷ f ∷ g) p = f
     mid (((c ∷ f) {c#f}) ∷ g) (oddEven (evenOdd p)) = mid (init ((c ∷ f) {c#f}) tt) p
