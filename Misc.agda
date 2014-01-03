@@ -2,6 +2,10 @@ module Misc where
   open import Data.Nat
   open import Relation.Binary.PropositionalEquality
 
+  m≤m : ∀ {m} → m ≤ m
+  m≤m {zero} = z≤n
+  m≤m {suc m} = s≤s m≤m
+
   +-suc : ∀ a b → suc a + b ≡ a + suc b
   +-suc zero b = refl
   +-suc (suc a) b = cong suc (+-suc a b)
