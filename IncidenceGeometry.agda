@@ -164,7 +164,32 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
                    (len c) ≡ suc (len (init c ne))
   len-init-suc [ _ ] ne = ⊥-elim ne
   len-init-suc (_ ∷ _) _ = refl
-   
+  
+  next : ∀ {e f} → (x : O) → (c : chain e f) → (ne : nonempty c) → x ∈ (init c ne) → O
+  next _ [ _ ] ne _ = ⊥-elim ne
+  next x (c ∷ f) ne _ with c
+  ... | [ e ] = e
+  next _ (_ ∷ f) _ (inj₁ _) | _ ∷ _ = f
+  next x (_ ∷ _) _ (inj₂ x∈c') | ((c' ∷ g) {p}) = next x ((c' ∷ g) {p}) tt x∈c'
 
+  ∈-++ : ∀ {e f g} → (x : O) → (c₁ : chain e f) → (c₂ : chain f g) → x ∈ c₁ ⊎ x ∈ c₂ → x ∈ (c₁ ++ c₂)
+  ∈-++ _ _ [ _ ] (inj₁ x∈c₁) = x∈c₁
+  ∈-++ x c₁ (c₂ ∷ g) (inj₁ x∈c₁) = inj₂ (∈-++ x c₁ c₂ (inj₁ x∈c₁))
+  ∈-++ _ [ _ ] c₂ (inj₂ x∈c₂) rewrite ++-[] c₂ = x∈c₂
+  ∈-++ _ (_ ∷ _) [ ._ ] (inj₂ x∈c₂) = inj₁ x∈c₂
+  ∈-++ _ (_ ∷ _) (_ ∷ _) (inj₂ (inj₁ x≡g)) = inj₁ x≡g
+  ∈-++ x (c₁ ∷ f) (c₂ ∷ _) (inj₂ (inj₂ x∈c₂)) = inj₂ (∈-++ x (c₁ ∷ f) c₂ (inj₂ x∈c₂))
+  
+  ∈-rev : ∀ {e f} (x : O) (c : chain e f) → (x ∈ c) → x ∈ (rev c)
+  ∈-rev _ [ _ ] x∈c = x∈c
+  ∈-rev x (c ∷ f) (inj₁ x≡f) = ∈-++ x ([ f ] ∷ last c) (rev c) (inj₁ (inj₂ x≡f))
+  ∈-rev x (c ∷ f) (inj₂ x∈c) = ∈-++ x ([ f ] ∷ (last c)) (rev c) (inj₂ (∈-rev x c x∈c))
+  
+  ∈-rev-inv : ∀ {e f} (x : O) (c : chain e f) → x ∈ (rev c) → (x ∈ c)
+  ∈-rev-inv x c p with ∈-rev x (rev c) p
+  ... | q rewrite (rev-id c) = q
 
-
+  prev : ∀ {e f} → (x : O) → (c : chain e f) → (ne : nonempty c) → x ∈ (tail c ne) → O
+  prev x c ne p rewrite (len-rev c) =
+       next x (rev c) (rev-nonempty c ne)
+           (∈-rev-inv x (init (rev c) (rev-nonempty c ne)) p)
