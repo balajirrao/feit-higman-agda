@@ -23,39 +23,95 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   snd {_} {f} _ = f
   
   infixl 5 _∷_  
- 
+
   data chain : O → O → Set
-  last : ∀ {e f} → chain e f → O
-  head : ∀ {e f} → chain e f → O
-  
+
   data chain where
     [_] : (e : O) → chain e e
-    _∷_ :{e f : O} → (c : chain e f) → (g : O) → .{p : f # g} → chain e g
+    _∷_ : ∀ {e f} → (c : chain e f) → (g : O) → .{p : f # g} → chain e g
 
+  head : ∀ {e f} → chain e f → O
+  head {e} _ = e
+
+  last : ∀ {e f} → chain e f → O
   last {_} {f} _ = f
-  head {e}     _ = e
 
-  len : ∀ {e f} → chain e f → ℕ
+  infixr 5 _++_
+  _++_ : ∀ {f g} → (e : O) → chain f g → .{p : e # f} → chain e g
+  _++_ e [ g ] {p} = ([ e ] ∷ g) {p}
+  _++_ e ((c ∷ g) {q}) {p} = (((e ++ c) {p}) ∷ g) {q}
+
+  
+  rev : ∀ {e f} → (c : chain e f) → chain f e
+  rev [ f ] = [ f ]
+  rev ((c ∷ f) {p}) = (f ++ rev c) {#-sym p}
+
+  rev-++ : ∀ {f g} (e : O) → (c : chain f g) → .{p : e # f} → rev ((e ++ c) {p}) ≡ ((rev c) ∷ e) {#-sym p}
+  rev-++ {.g} {g} e [ .g ] = refl
+  rev-++ {f} {g} e (c ∷ .g) {p}  rewrite (rev-++ e c {p}) = refl
+  
+  rev-id : ∀ {e f} (c : chain e f) → rev (rev c) ≡ c
+  rev-id [ _ ] = refl
+  rev-id ((c ∷ f) {p}) rewrite rev-++ f (rev c) {#-sym p} | rev-id c = refl
+  
+  ++-∷ : ∀ {f g} (e : O) → (c : chain f g) → .{p : e # f} → (e ++ c) {p} ≡ rev(((rev c) ∷ e) {#-sym p})
+  ++-∷ {.g} {g} e [ .g ] = refl
+  ++-∷ {f} {g} e ((c ∷ .g) {p}) rewrite rev-++ g (rev c) {#-sym p} | rev-id c = refl
+
+  ∷-++ : ∀ {e f} (c : chain e f) (g : O) .{p : f # g} → (c ∷ g) {p} ≡ rev ((g ++ (rev c)) {#-sym p})
+  ∷-++ c g {p} rewrite (rev-++ g (rev c) {#-sym p}) | rev-id c = refl
+  
+  len : ∀ {e f} → (c : chain e f) → ℕ
   len [ _ ] = zero
   len (c ∷ _) = suc (len c)
 
-  nonempty : ∀ {e f} → chain e f → Set
+  nonempty : ∀ {e f} → (c : chain e f) → Set
   nonempty [ _ ] = ⊥
   nonempty (_ ∷ _) = ⊤
 
-  last-but-one : ∀ {e f} → (c : chain e f) → (ne : nonempty c) → O
-  last-but-one [ _ ] ne = ⊥-elim ne
-  last-but-one (c ∷ _) _ = last c
+  last¹ : ∀ {e f} (c : chain e f) {ne : nonempty c} → O
+  last¹ [ _ ] {ne} = ⊥-elim ne
+  last¹ (c ∷ _)  = last c
 
-  init : ∀ {e f} (c : chain e f) → (ne : nonempty c) → chain e (last-but-one c ne)
-  init [ _ ] ne = ⊥-elim ne
-  init (c ∷ _) _ = c
+  init : ∀ {e f} (c : chain e f) → {ne : nonempty c} → chain e (last¹ c {ne})
+  init [ _ ] {ne} = ⊥-elim ne
+  init (c ∷ _) = c
 
-  infixl 5 _++_ 
-  _++_ : ∀ {e f g} → (c₁ : chain e f) → (c₂ : chain f g) → chain e g
-  (c₁ ++ [ _ ])  = c₁
-  (c₁ ++ (c₂ ∷ e) {p}) = (c₁ ++ c₂ ∷ e) {p}
+  joinr : ∀ {e f g h} → (c₁ : chain e f) → (c₂ : chain g h) → .{p : f # g} → chain e h
+  joinr {e} {f} {.h} {h} c₁ [ .h ] {p} = (c₁ ∷ h) {p}
+  joinr {e} {f} {g} {h} c₁ ((c₂ ∷ .h) {p}) {q} = (((joinr c₁ c₂) {q}) ∷ h) {p}
+  
+  --joinr-++ : ∀ {f g} → (e : O) → (c : chain f g) → .{p : e # f} → joinr [ e ] c {p} ≡ (e ++ c) {p}
+  --joinr-++ {.g} {g} e [ .g ] = refl
+  --joinr-++ {f} {g} e (c ∷ .g) {p} rewrite sym (joinr-++ e c {p}) = refl
+
+  joinl : ∀ {e f g h} → (c₁ : chain e f) → (c₂ : chain g h) → .{p : f # g} → chain e h
+  joinl {.f} {f} [ .f ] c₂ {p} = (f ++ c₂) {p}
+  joinl {e} {f} ((c₁ ∷ .f) {p}) c₂ {q} = joinl c₁ ((f ++ c₂) {q}) {p}
  
+  joinl-rev : ∀ {e f g h} → (c₁ : chain e f) → (c₂ : chain g h) → .{p : f # g} → rev (joinr (rev c₂) (rev c₁)) ≡ joinr c₁ c₂
+  joinl-rev {.f} {f} [ .f ] c₂ = {!!}
+  joinl-rev {e} {f} (c₁ ∷ .f) c₂ = {!!}
+
+  joinl-∷ : ∀ {e f} (c : chain e f) (g : O) .{p : f # g} → joinl c [ g ] {p} ≡ (c ∷ g) {p}
+  joinl-∷ {.f} {f} [ .f ] g = {!!}
+  joinl-∷ {e} {f} ((c ∷ .f) {p}) g {q} = {!!}
+
+  joinl-assoc :  ∀ {e f g h i j} (c₁ : chain e f) (c₂ : chain g h) (c₃ : chain i j)
+                   .{p : f # g} .{q : h # i} →
+                   joinl (joinl c₁ c₂ {p}) c₃ {q} ≡ joinl c₁ (joinl c₂ c₃ {q}) {p}
+  joinl-assoc {.f} {f} {.h} {h} [ .f ] [ .h ] c₃ = {!!}
+  joinl-assoc {.f} {f} {g} {h} [ .f ] (c₂ ∷ .h) c₃ = {!!}
+  joinl-assoc {e} {f} {.h} {h} (c₁ ∷ .f) [ .h ] c₃ = {!!}
+  joinl-assoc {e} {f} {g} {h} (c₁ ∷ .f) (c₂ ∷ .h) c₃ = {!joinl-assoc [ f ] c₂ [ h ]!}
+
+  joinlr : ∀ {e f g h} → (c₁ : chain e f) → (c₂ : chain g h) → .{p : f # g} → joinr c₁ c₂ {p} ≡ rev (joinl (rev c₂) (rev c₁) {#-sym p})
+  joinlr {e} {f} {.h} {h} c₁ [ .h ] = {!!}
+  joinlr {e} {f} {g} {h} c₁ (c₂ ∷ .h) = {!!}
+
+
+{- 
+
   ++-nonempty : ∀ {e f g} → (c₁ : chain e f) → (c₂ : chain f g) →
                 (nonempty c₁) → (nonempty (c₁ ++ c₂))
   ++-nonempty c₁ [ _ ] p = p
@@ -76,10 +132,6 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   ++-len c₁ [ _ ] rewrite (+-com (len c₁) 0) = refl
   ++-len c₁ (c₂ ∷ _) rewrite (sym (++-len c₁ c₂))
                              = sym (+-suc (len c₁) (len c₂))
-  
-  rev : ∀ {e f} → (c : chain e f) → (chain f e)
-  rev [ x ] = [ x ]
-  rev ((c ∷ _) {p} ) = ([ _ ] ∷ (last c)) {#-sym p} ++ rev c
  
   rev-++ : ∀ {e f g} → (c₁ : chain e f) → (c₂ : chain f g) →
              rev (c₁ ++ c₂) ≡ (rev c₂) ++ (rev c₁)
@@ -114,6 +166,10 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   x ∈ ([ e ]) = x ≡ e
   x ∈ (c ∷ f) = x ≡ f ⊎ x ∈ c
   
+  ∈-head : ∀ {e f} → (c : chain e f) → e ∈ c
+  ∈-head {.f} {f} [ .f ] = refl
+  ∈-head {e} {f} (c ∷ .f) = inj₂ (∈-head c)
+
   irred : ∀ {e f} → chain e f → Set
   irred [ _ ] = ⊤
   irred (([ e ]) ∷ f) = (e ≡ f) → ⊥
@@ -122,7 +178,7 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   irred-∷ : ∀ {e f} → (c : chain e f) → (g : O) →
               .{f#g : f # g} → irred ((c ∷ g) {f#g}) → f ≡ g → ⊥
   irred-∷ [ _ ] _ ic eq = ic eq
-  irred-∷ ((c ∷ f) {p}) g ic eq = proj₁ ic (subst (_#_ (last c)) eq p)
+  irred-∷ ((c ∷ .g) {p}) g ic refl = proj₁ ic p
 
   irred-++ : ∀ {h} → (e f g : O) → .{e#f : e # f} → .{f#g : f # g} →
                (irred ((([ e ] ∷ f) {e#f} ∷ g) {f#g})) → (c : chain g h) →
@@ -172,19 +228,21 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   next _ (_ ∷ f) _ (inj₁ _) | _ ∷ _ = f
   next x (_ ∷ _) _ (inj₂ x∈c') | ((c' ∷ g) {p}) = next x ((c' ∷ g) {p}) tt x∈c'
 
+
+{-
   ∈-++ : ∀ {e f g} → (x : O) → (c₁ : chain e f) → (c₂ : chain f g) → x ∈ c₁ ⊎ x ∈ c₂ → x ∈ (c₁ ++ c₂)
-  ∈-++ _ _ [ _ ] (inj₁ x∈c₁) = x∈c₁
-  ∈-++ x c₁ (c₂ ∷ g) (inj₁ x∈c₁) = inj₂ (∈-++ x c₁ c₂ (inj₁ x∈c₁))
-  ∈-++ _ [ _ ] c₂ (inj₂ x∈c₂) rewrite ++-[] c₂ = x∈c₂
-  ∈-++ _ (_ ∷ _) [ ._ ] (inj₂ x∈c₂) = inj₁ x∈c₂
-  ∈-++ _ (_ ∷ _) (_ ∷ _) (inj₂ (inj₁ x≡g)) = inj₁ x≡g
-  ∈-++ x (c₁ ∷ f) (c₂ ∷ _) (inj₂ (inj₂ x∈c₂)) = inj₂ (∈-++ x (c₁ ∷ f) c₂ (inj₂ x∈c₂))
-  
+  ∈-++ {.f} {f} .f [ .f ] c₂ (inj₁ refl) = ∈-head ([ f ] ++ c₂)
+  ∈-++ {e} {f} .f (c₁ ∷ .f) c₂ (inj₁ (inj₁ refl)) = {!!}
+  ∈-++ {e} {f} x (c₁ ∷ .f) c₂ (inj₁ (inj₂ y)) = {!!}
+  ∈-++ x c₁ c₂ (inj₂ y) = {!!}
+-}
   ∈-rev : ∀ {e f} (x : O) (c : chain e f) → (x ∈ c) → x ∈ (rev c)
   ∈-rev _ [ _ ] x∈c = x∈c
-  ∈-rev x (c ∷ f) (inj₁ x≡f) = ∈-++ x ([ f ] ∷ last c) (rev c) (inj₁ (inj₂ x≡f))
-  ∈-rev x (c ∷ f) (inj₂ x∈c) = ∈-++ x ([ f ] ∷ (last c)) (rev c) (inj₂ (∈-rev x c x∈c))
-  
+  ∈-rev .f₁ (c ∷ f₁) (inj₁ refl) = ∈-head ([ f₁ ] ∷ (last c) ++ rev c)
+  ∈-rev x (_∷_ {.f} {f} [ .f ] f₁) (inj₂ x∈c) = {!!}
+  ∈-rev x (_∷_ {e} {f} (c ∷ .f) f₂) (inj₂ x∈c) = {!!}
+
+{-  
   ∈-rev-inv : ∀ {e f} (x : O) (c : chain e f) → x ∈ (rev c) → (x ∈ c)
   ∈-rev-inv x c p with ∈-rev x (rev c) p
   ... | q rewrite (rev-id c) = q
@@ -193,3 +251,19 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   prev x c ne p rewrite (len-rev c) =
        next x (rev c) (rev-nonempty c ne)
            (∈-rev-inv x (init (rev c) (rev-nonempty c ne)) p)
+
+  dropr : ∀ {e f} → (x : O) →  (c : chain e f) → x ∈ c → chain e x
+  dropr {.f} {f} .f [ .f ] refl = [ f ]
+  dropr {e} {f} .f ((c ∷ .f) {p}) (inj₁ refl) = (c ∷ f) {p}
+  dropr {e} {f} x (c ∷ .f) (inj₂ y) = dropr x c y
+
+  dropl : ∀ {e f} → (x : O) →  (c : chain e f) → x ∈ c → chain x f
+  dropl x c p = rev (dropr x (rev c) (∈-rev x c p))
+
+  drop-split : ∀ {e f} (x : O) →  (c : chain e f) → (p : x ∈ c) → ((dropr x c p) ++ (dropl x c p)) ≡ c
+  drop-split {.f} {f} x [ .f ] p = {!!}
+  drop-split {e} {f} .f (c ∷ .f) (inj₁ refl) = {!!}
+  drop-split {e} {f} x (c ∷ .f) (inj₂ y) = {!!}
+
+-}
+-}
