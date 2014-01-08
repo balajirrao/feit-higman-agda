@@ -1,15 +1,17 @@
 module IncidencePlane where
   open import Data.Bool using (Bool; true; false)
   open import Data.Nat
-  open import Data.Unit using (⊤; tt)
-  open import Data.Empty using (⊥; ⊥-elim)
+  open import Data.Unit hiding (_≤_)
+  open import Data.Empty
   open import Data.Product
   open import
-    Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; subst₂; sym; trans; _≢_)
-  open import Data.Sum using (_⊎_; inj₁; inj₂)
+    Relation.Binary.PropositionalEquality
+  open import Data.Sum
   open import Data.Maybe
 
   open import Relation.Nullary.Core
+
+  open import Misc
  
   --private
   postulate
@@ -35,43 +37,6 @@ module IncidencePlane where
 
   import IncidenceGeometry as IG
   open IG O _#_
-
-  module EvenOdd where
-
-    open import Data.Nat
-
-    data Even : ℕ → Set
-    data Odd : ℕ → Set 
-
-    data Even where
-      evenZero : Even 0
-      oddEven : {n : ℕ} → Odd n → Even (suc n)
-    
-    data Odd where
-      evenOdd : {n : ℕ} → Even n → Odd (suc n)
-
-    evenSuc : ∀ {m} → Even m → Even (suc (suc m))
-    evenSuc {zero} p = oddEven (evenOdd p)
-    evenSuc {suc m} p = oddEven (evenOdd p)
-  
-    oddSuc : ∀ {m} → Odd m → Odd (suc (suc m))
-    oddSuc {zero} p = evenOdd (oddEven p)
-    oddSuc {suc m} p = evenOdd (oddEven p)
-  
-    oddOne : Odd 1
-    oddOne = evenOdd evenZero
-
-    eitherEvenOdd : ∀ x → Even x → Odd x → ⊥
-    eitherEvenOdd zero e ()
-    eitherEvenOdd (suc x) (oddEven p) (evenOdd q) = eitherEvenOdd x q p
-
-    evenOddDec : ∀ m → (Even m) ⊎ (Odd m)
-    evenOddDec zero = inj₁ evenZero
-    evenOddDec (suc m) with (evenOddDec m)
-    evenOddDec (suc m) | inj₁ x = inj₂ (evenOdd x)
-    evenOddDec (suc m) | inj₂ y = inj₁ (oddEven y)
-
-  open EvenOdd
  
   irred-PP-even : ∀ {p p'} → (c : chain (inj₁ p) (inj₁ p')) → irred c → Even (len c)
   irred-PL-odd : ∀ {p l} → (c : chain (inj₁ p) (inj₂ l)) → irred c → Odd (len c)
