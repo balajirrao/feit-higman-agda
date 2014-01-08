@@ -61,9 +61,15 @@ module IncidencePlane where
     oddOne : Odd 1
     oddOne = evenOdd evenZero
 
-    aa : ∀ x → Even x → Odd x → ⊥
-    aa zero e ()
-    aa (suc x) (oddEven p) (evenOdd q) = aa x q p
+    eitherEvenOdd : ∀ x → Even x → Odd x → ⊥
+    eitherEvenOdd zero e ()
+    eitherEvenOdd (suc x) (oddEven p) (evenOdd q) = eitherEvenOdd x q p
+
+    evenOddDec : ∀ m → (Even m) ⊎ (Odd m)
+    evenOddDec zero = inj₁ evenZero
+    evenOddDec (suc m) with (evenOddDec m)
+    evenOddDec (suc m) | inj₁ x = inj₂ (evenOdd x)
+    evenOddDec (suc m) | inj₂ y = inj₁ (oddEven y)
 
   open EvenOdd
  
@@ -97,7 +103,7 @@ module IncidencePlane where
   module GenPolygon (n : ℕ) where
     postulate
       A₁ : ∀ (e f : O) → ∃ {A = chain e f} (λ c → (len  c) ≤ n)
-      A₂ : ∀ (e f : O) → Maybe (∃! {A = chain e f} _≡_ (λ c → irred c × len c < n)) 
+      A₂ : ∀ (e f : O) → (c₁ : chain e f) (c₂ : chain e f) → (len c₁ < n) → (len c₂ < n) → (c₁ ≡ c₂)
   
     open Data.Nat.≤-Reasoning
  
@@ -107,6 +113,10 @@ module IncidencePlane where
 
     nondegen : ∀ {e f} → Set
     nondegen {e} {f} = ∃ {A = chain e f} (λ c → shortest c × (len c) ≡ n)
+
+    closed : ∀ {e f} (c : chain e f) → Set
+    closed {.f} {f} IG.[ .f ] = ⊥
+    closed {e} {f} (c IG.∷ .f) = f ≡ e
 
     closed-even : ∀ {e} → (c : chain e e) → irred c → Even (len c)
     closed-even {inj₁ _} c = irred-PP-even c
