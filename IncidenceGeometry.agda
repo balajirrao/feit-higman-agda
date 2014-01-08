@@ -196,3 +196,8 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
        next x (rev c) (rev-nonempty c ne)
            (∈-rev-inv x (init (rev c) (rev-nonempty c ne)) p)
 
+  -- Extend c₁ by c₂. Like c₁, but in the case c₁ ends where c₂ begins, unlike ++ 
+  --- this function does not make a chain with redundant entry for (last c₁) (≡ last c₂)
+  extend : ∀ {e f g} (c₁ : chain e f) (c₂ : chain f g) → chain e g
+  extend [ _ ] c₂ = c₂
+  extend ((c₁ ∷ _) {p}) c₂ = (c₁ ++ c₂) {p}
