@@ -24,17 +24,53 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   
   infixl 5 _∷_  
  
-  data chain : O → O → Set
-  last : ∀ {e f} → chain e f → O
-  head : ∀ {e f} → chain e f → O
-  
-  data chain where
+  data chain : O → O → Set where
     [_] : (e : O) → chain e e
     _∷_ :{e f : O} → (c : chain e f) → (g : O) → .{p : f # g} → chain e g
 
+  data lchain : O → O → Set where
+    [_] : (e : O) → lchain e e
+    _++_ : {f g : O} → (e : O) (c : lchain f g) .{p : e # f} → lchain e g
+
+  last : ∀ {e f} → chain e f → O
+  head : ∀ {e f} → chain e f → O
   last {_} {f} _ = f
   head {e}     _ = e
 
+  headl : ∀ {e f} → lchain e f → O
+  headl {e} _ = e
+
+  rev : ∀ {e f} (c : chain e f) → lchain f e
+  rev {.f} {f} [ .f ] = [ f ]
+  rev {e} {f} ((c ∷ .f) {p}) = (f ++ rev c) {#-sym p}
+
+  revl : ∀ {e f} (c : lchain e f) → chain f e
+  revl {.f} {f} [ .f ] = [ f ]
+  revl {e} ((.e ++ c) {p}) = (revl c ∷ e) {#-sym p}
+  
+  rev-id : ∀ {e f} (c : chain e f) → revl (rev c) ≡ c
+  rev-id {.f} {f} [ .f ] = refl
+  rev-id {e} {f} (c ∷ .f) rewrite (rev-id c) = refl
+
+  revl-id : ∀ {e f} (c : lchain e f) → rev (revl c) ≡ c
+  revl-id {.f} {f} [ .f ] = refl
+  revl-id {e} (.e ++ c) rewrite (revl-id c) = refl
+
+  rtol' : ∀ {e f h} → chain e h → lchain h f → lchain e f
+  rtol' {.h} {f} {h} [ .h ] acc = acc
+  rtol' {e} {f} {h} ((c ∷ .h) {p}) acc = rtol' c (((last c) ++ acc) {p})
+  
+  rtol : ∀ {e f} → chain e f → lchain e f
+  rtol c = rtol' c [ _ ]
+
+  ltor' : ∀ {e f h} → lchain h f → chain e h → chain e f
+  ltor' {e} {f} [ .f ] acc = acc
+  ltor' {e} {f} {h} ((.h ++ c) {p}) acc = ltor' c ((acc ∷ headl c) {p})
+                                                                   
+  ltor : ∀ {e f} → lchain e f → chain e f
+  ltor c = ltor' c [ _ ]
+  
+{-
   len : ∀ {e f} → chain e f → ℕ
   len [ _ ] = zero
   len (c ∷ _) = suc (len c)
@@ -264,3 +300,5 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   nth-∈ {.f} {f} [ .f ] z≤n = refl
   nth-∈ {e} {f} (c ∷ .f) z≤n = inj₂ (∈-head c)
   nth-∈ {e} {f} (c ∷ .f) (s≤s p₁) = inj₂ (nth-∈ c p₁)
+
+-}
