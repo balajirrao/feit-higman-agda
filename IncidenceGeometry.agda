@@ -96,7 +96,7 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
 
   rev-nonempty : ∀ {e f} → (c : chain e f) → nonempty c → nonempty (rev c)
   rev-nonempty [ _ ] p = p
-  rev-nonempty (_∷_ {.f} {f} [ .f ] f₁) p₁ = {!!}
+  rev-nonempty (_∷_ {.f} {f} [ .f ] f₁) p₁ = tt
   rev-nonempty (_∷_ {e} {f} ((c ∷ .f) {p}) g {q}) p₂
                rewrite ++-assoc [ g ] [ f ] (rev c) {#-sym q} {#-sym p} =
                        ++-nonempty ([ g ] ++ [ f ]) (rev c) {#-sym p} tt
@@ -191,13 +191,62 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   ∈-rev-inv x c p with ∈-rev x (rev c) p
   ... | q rewrite (rev-id c) = q
 
-  prev : ∀ {e f} → (x : O) → (c : chain e f) → (ne : nonempty c) → x ∈ (tail c ne) → O
+  prev : ∀ {e f} → (x : O) → (c : chain e f) →
+                   (ne : nonempty c) → x ∈ (tail c ne) → O
   prev x c ne p rewrite (len-rev c) =
        next x (rev c) (rev-nonempty c ne)
            (∈-rev-inv x (init (rev c) (rev-nonempty c ne)) p)
 
-  -- Extend c₁ by c₂. Like c₁, but in the case c₁ ends where c₂ begins, unlike ++ 
-  --- this function does not make a chain with redundant entry for (last c₁) (≡ last c₂)
+  -- Extend c₁ by c₂. Like c₁, but in the case c₁ ends where c₂ begins,
+  -- unlike ++ this function does not make a chain with redundant entry
+  -- for (last c₁) (≡ last c₂)
   extend : ∀ {e f g} (c₁ : chain e f) (c₂ : chain f g) → chain e g
   extend [ _ ] c₂ = c₂
   extend ((c₁ ∷ _) {p}) c₂ = (c₁ ++ c₂) {p}
+  
+  -- this theorem, though holds for ++, does not hold automatically
+  -- for extend, because of the existence of cases in extend
+  extend-∷ : ∀ {e f g} (c₁ : chain e f) (c₂ : chain f g) (h : O) .{p : g # h} →
+             extend c₁ ((c₂ ∷ h) {p}) ≡ ((extend c₁ c₂) ∷ h) {p}
+  extend-∷ [ _ ] _ _ = refl
+  extend-∷ (_ ∷ _) _ _ = refl
+
+  -- drop the elements to the right hand side of x
+  dropr : ∀ {e f} → (x : O) →  (c : chain e f) → x ∈ c → chain e x
+  dropr f [ .f ] refl = [ f ]
+  dropr f ((c ∷ .f) {p}) (inj₁ refl) = (c ∷ f) {p}
+  dropr x (c ∷ _) (inj₂ x∈c) = dropr x c x∈c
+  
+  -- drop the elements to the left hand side of x
+  dropl : ∀ {e f} → (x : O) →  (c : chain e f) → x ∈ c → chain x f
+  dropl x c p = rev (dropr x (rev c) (∈-rev x c p))
+
+  dropr-tail : ∀ {f g} (e : O) (c : chain f g) .{p : e # f} →
+             dropr e (([ e ] ++ c) {p}) (∈-++ e [ e ] c (inj₁ refl)) ≡ [ e ]
+  dropr-tail e [ g ] = refl
+  dropr-tail e (c ∷ g) = dropr-tail e c
+
+  dropr-body : ∀ {e f g} (x : O) (c : chain f g) .{p : e # f} (x∈c : x ∈ c) →
+             dropr x (([ e ] ++ c) {p})
+               (∈-++ x [ e ] c (inj₂ x∈c)) ≡ ([ e ] ++ dropr x c x∈c) {p}
+  dropr-body _ [ ._ ] refl = refl
+  dropr-body _ (_ ∷ ._) (inj₁ refl) = refl
+  dropr-body x (c ∷ _) (inj₂ x∈c) = dropr-body x c x∈c
+  
+  dropl-body : ∀ {e f g} (c : chain e f) (x : O) (x∈c : x ∈ c) .{p : f # g} →
+             dropl x ((c ∷ g) {p}) (inj₂ x∈c) ≡ ((dropl x c x∈c) ∷ g) {p}
+  dropl-body {g = g} c x x∈c {p} rewrite
+                         dropr-body {e = g} x (rev c) {#-sym p} (∈-rev x c x∈c) 
+                     with (dropr x (rev c) (∈-rev x c x∈c))
+  ... | c' rewrite rev-++ [ g ] c' {#-sym p} = refl
+                       
+  drop-split : ∀ {e f} (x : O) →  (c : chain e f) → (p : x ∈ c) →
+                 extend (dropr x c p) (dropl x c p) ≡ c
+  drop-split _ [ ._ ] refl = refl
+  drop-split f ((c ∷ .f) {p}) (inj₁ refl)
+               rewrite dropr-tail f (rev c) {#-sym p} = refl
+  drop-split x ((c ∷ f) {p}) (inj₂ x∈c)
+               rewrite dropl-body c x x∈c {p} |
+                       extend-∷ (dropr x c x∈c) (dropl x c x∈c) f {p} |
+                       drop-split x c x∈c = refl
+                                                 
