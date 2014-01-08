@@ -50,4 +50,15 @@ module Misc where
   +-com zero zero = refl
   +-com zero (suc b) rewrite +-com b 0 = refl
   +-com (suc a) b = trans (cong suc (+-com a b)) (+-suc b a)
+
+  div2 : ∀ n → Even n → ℕ
+  div2 .0 evenZero = 0
+  div2 .(suc (suc n)) (oddEven (evenOdd {n} x)) = suc (div2 n x)
   
+  div2*2 : ∀ n → (p : Even n) → 2 * (div2 n p) ≡ n
+  div2*2 .0 evenZero = refl
+  div2*2 .(suc (suc n)) (oddEven (evenOdd {n} x))
+               rewrite sym(+-suc (div2 n x) (div2 n x + 0)) =
+                                       cong suc (cong suc (div2*2 n x))
+
+
