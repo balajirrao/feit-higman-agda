@@ -117,3 +117,11 @@ module IncidencePlane where
     mid ([ e ] ∷ f) (oddEven ())
     mid ([ e ] ∷ f ∷ g) p = f
     mid (((c ∷ f) {c#f}) ∷ g) (oddEven (evenOdd p)) = mid (init ((c ∷ f) {c#f}) tt) p
+ 
+    dropr : ∀ {e f} → (x : O) →  (c : chain e f) → x ∈ c → chain e x
+    dropr {.f} {f} x IG.[ .f ] p = subst (λ z → chain z x) p [ x ]
+    dropr {e} {f} x ((c ∷ .f) {p}) (inj₁ x₁) = subst (λ z → chain e z) (sym x₁) ((c ∷ f) {p})
+    dropr {e} {f} x (c IG.∷ .f) (inj₂ y) = dropr x c y
+
+    dropl : ∀ {e f} → (x : O) →  (c : chain e f) → x ∈ c → chain x f
+    dropl x c p = rev (dropr x (rev c) (∈-rev x c p))
