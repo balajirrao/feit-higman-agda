@@ -166,6 +166,10 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   x ∈ ([ e ]) = x ≡ e
   x ∈ (c ∷ f) = x ≡ f ⊎ x ∈ c
   
+  ∈-head : ∀ {e f} (c : chain e f) → e ∈ c
+  ∈-head {.f} {f} [ .f ] = refl
+  ∈-head {e} {f} (c ∷ .f) = inj₂ (∈-head c)
+
   next : ∀ {e f} → (x : O) → (c : chain e f) → (ne : nonempty c) →
          x ∈ (init c ne) → O
   next _ [ _ ] ne _ = ⊥-elim ne
@@ -224,7 +228,7 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
   dropr-tail : ∀ {f g} (e : O) (c : chain f g) .{p : e # f} →
              dropr e (([ e ] ++ c) {p}) (∈-++ e [ e ] c (inj₁ refl)) ≡ [ e ]
   dropr-tail e [ g ] = refl
-  dropr-tail e (c ∷ g) = dropr-tail e c
+  dropr-tail e (c ∷ _) = dropr-tail e c
 
   dropr-body : ∀ {e f g} (x : O) (c : chain f g) .{p : e # f} (x∈c : x ∈ c) →
              dropr x (([ e ] ++ c) {p})
@@ -250,3 +254,13 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
                        extend-∷ (dropr x c x∈c) (dropl x c x∈c) f {p} |
                        drop-split x c x∈c = refl
                                                  
+
+  nth : ∀ {e f n} (c : chain e f) → (p : n ≤ len c) → O
+  nth [ f ] z≤n = f
+  nth {e} (_ ∷ _) z≤n = e
+  nth (c ∷ _) (s≤s p) = nth c p
+
+  nth-∈ : ∀ {e f n} (c : chain e f) → (p : (n ≤ len c)) → (nth c p) ∈ c
+  nth-∈ {.f} {f} [ .f ] z≤n = refl
+  nth-∈ {e} {f} (c ∷ .f) z≤n = inj₂ (∈-head c)
+  nth-∈ {e} {f} (c ∷ .f) (s≤s p₁) = inj₂ (nth-∈ c p₁)
