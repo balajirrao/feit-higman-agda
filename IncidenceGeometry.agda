@@ -24,8 +24,19 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
     [_] : (e : O) → chain e e zero
     _∷_ : ∀ {f g n} (e : O) (c : chain f g n) .{p : e # f} → chain e g (suc n)
 
-  nth : ∀ {e f m n} (c : chain e f m) (p : n ≤ m) → O
-  nth {e} _ z≤n = e
-  nth (_ ∷ c) (s≤s p₁) = nth c p₁
+  nth : ∀ {e f n} (c : chain e f n) (m : ℕ) {p : m ≤ n} → O
+  nth {e} _ ._ {z≤n} = e
+  nth (_ ∷ c) (suc m) {s≤s p} = nth c m {p}
 
-  
+  head : ∀ {e f n} (c : chain e f n) → O
+  head {e} c = nth c zero {z≤n}
+
+  last : ∀ {e f n} (c : chain e f n) → O
+  last {n = n} c = nth c n {m≤m}
+
+  tail : ∀ {e f n} (c : chain e f (suc n)) → chain (nth c 1 {s≤s z≤n}) f n
+  tail (_ ∷ c) = c
+
+  init : ∀ {e f n} (c : chain e f (suc n)) → chain e (nth c n {n≤suc}) n
+  init {e} {f} (.e ∷ [ .f ]) = [ e ]
+  init ((e ∷ (f ∷ c)) {p}) = (e ∷ init (f ∷ c)) {p}

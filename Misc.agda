@@ -53,9 +53,9 @@ module Misc where
   +-com zero (suc b) rewrite +-com b 0 = refl
   +-com (suc a) b = trans (cong suc (+-com a b)) (+-suc b a)
 
-  n≤suc : ∀ n → n ≤ suc n
-  n≤suc zero = z≤n
-  n≤suc (suc n) = s≤s (n≤suc n)
+  n≤suc : ∀ {n} → n ≤ suc n
+  n≤suc {zero} = z≤n
+  n≤suc {suc n} = s≤s n≤suc
  
   div2 : ∀ n → Even n → ℕ
   div2 .0 evenZero = 0
@@ -70,5 +70,5 @@ module Misc where
   div2≤ : ∀ n → (p : Even n) → (div2 n p) ≤ n
   div2≤ .0 evenZero = z≤n
   div2≤ .(suc (suc n)) (oddEven (evenOdd {n} x))
-              = s≤s (begin div2 n x ≤⟨ div2≤ n x ⟩ relTo (n≤suc n))
+              = s≤s (begin div2 n x ≤⟨ div2≤ n x ⟩ relTo (n≤suc))
  
