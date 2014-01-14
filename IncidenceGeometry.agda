@@ -16,7 +16,6 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set) where
     #-refl : ∀ {e} → e # e
     #-sym : ∀ {e f} → e # f → f # e
 
-  infixl 5 _∷_  
   infixr 5 _∷_  
  
   data chain : O → O → ℕ → Set where
