@@ -12,25 +12,25 @@ module Misc where
 
     data Even where
       evenZero : Even 0
-      oddEven : {n : ℕ} → Odd n → Even (suc n)
+      evenSuc : ∀ {m} → Even m → Even (suc (suc m))
+
+      
     
     data Odd where
-      evenOdd : {n : ℕ} → Even n → Odd (suc n)
+      oddOne : Odd 1
+      oddSuc : ∀ {m} → Odd m → Odd (suc (suc m))
+     
+    evenOdd : {n : ℕ} → Even n → Odd (suc n)
+    evenOdd evenZero = oddOne
+    evenOdd (evenSuc p) = oddSuc (evenOdd p)
 
-    evenSuc : ∀ {m} → Even m → Even (suc (suc m))
-    evenSuc {zero} p = oddEven (evenOdd p)
-    evenSuc {suc m} p = oddEven (evenOdd p)
-  
-    oddSuc : ∀ {m} → Odd m → Odd (suc (suc m))
-    oddSuc {zero} p = evenOdd (oddEven p)
-    oddSuc {suc m} p = evenOdd (oddEven p)
-  
-    oddOne : Odd 1
-    oddOne = evenOdd evenZero
+    oddEven : {n : ℕ} → Odd n → Even (suc n)
+    oddEven oddOne = evenSuc evenZero
+    oddEven (oddSuc p) = evenSuc (oddEven p)
 
     eitherEvenOdd : ∀ x → Even x → Odd x → ⊥
-    eitherEvenOdd zero e ()
-    eitherEvenOdd (suc x) (oddEven p) (evenOdd q) = eitherEvenOdd x q p
+    eitherEvenOdd .0 evenZero ()
+    eitherEvenOdd .(suc (suc m)) (evenSuc {m} p) (oddSuc q) = eitherEvenOdd m p q
 
     evenOddDec : ∀ m → (Even m) ⊎ (Odd m)
     evenOddDec zero = inj₁ evenZero
@@ -58,17 +58,16 @@ module Misc where
   n≤suc {suc n} = s≤s n≤suc
  
   div2 : ∀ {n} → Even n → ℕ
-  div2 evenZero = 0
-  div2  (oddEven (evenOdd {n} x)) = suc (div2 x)
-  
-  div2*2 : ∀ {n} → (p : Even n) → 2 * (div2 p) ≡ n
-  div2*2  evenZero = refl
-  div2*2 (oddEven (evenOdd {n} x))
-               rewrite sym(+-suc (div2 x) (div2 x + 0)) =
-                                       cong suc (cong suc (div2*2 x))
+  div2 evenZero = zero
+  div2 (evenSuc q) = suc (div2 q) 
+ 
+
+  div2*2 : ∀ {n} (p : Even n) → (div2 p) * 2 ≡ n
+  div2*2 evenZero = refl
+  div2*2 (evenSuc {n} x) = cong (λ z → suc (suc z)) (div2*2 x)
+
 
   div2≤ : ∀ {n} → (p : Even n) → (div2 p) ≤ n
   div2≤ evenZero = z≤n
-  div2≤ (oddEven (evenOdd {n} x))
+  div2≤ (evenSuc {n} x)
               = s≤s (begin div2 x ≤⟨ div2≤ x ⟩ relTo (n≤suc))
- 
