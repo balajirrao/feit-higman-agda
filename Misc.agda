@@ -57,18 +57,18 @@ module Misc where
   n≤suc {zero} = z≤n
   n≤suc {suc n} = s≤s n≤suc
  
-  div2 : ∀ n → Even n → ℕ
-  div2 .0 evenZero = 0
-  div2 .(suc (suc n)) (oddEven (evenOdd {n} x)) = suc (div2 n x)
+  div2 : ∀ {n} → Even n → ℕ
+  div2 evenZero = 0
+  div2  (oddEven (evenOdd {n} x)) = suc (div2 x)
   
-  div2*2 : ∀ n → (p : Even n) → 2 * (div2 n p) ≡ n
-  div2*2 .0 evenZero = refl
-  div2*2 .(suc (suc n)) (oddEven (evenOdd {n} x))
-               rewrite sym(+-suc (div2 n x) (div2 n x + 0)) =
-                                       cong suc (cong suc (div2*2 n x))
+  div2*2 : ∀ {n} → (p : Even n) → 2 * (div2 p) ≡ n
+  div2*2  evenZero = refl
+  div2*2 (oddEven (evenOdd {n} x))
+               rewrite sym(+-suc (div2 x) (div2 x + 0)) =
+                                       cong suc (cong suc (div2*2 x))
 
-  div2≤ : ∀ n → (p : Even n) → (div2 n p) ≤ n
-  div2≤ .0 evenZero = z≤n
-  div2≤ .(suc (suc n)) (oddEven (evenOdd {n} x))
-              = s≤s (begin div2 n x ≤⟨ div2≤ n x ⟩ relTo (n≤suc))
+  div2≤ : ∀ {n} → (p : Even n) → (div2 p) ≤ n
+  div2≤ evenZero = z≤n
+  div2≤ (oddEven (evenOdd {n} x))
+              = s≤s (begin div2 x ≤⟨ div2≤ x ⟩ relTo (n≤suc))
  
