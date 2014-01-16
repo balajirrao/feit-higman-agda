@@ -19,6 +19,11 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set)
     nil : ∀ {e} → chain e e zero
     _∷_ : ∀ {e f g n} (e#f : e # f) (c : chain f g n) → chain e g (suc n)
 
+  infixl 4 _=c=_
+  data _=c=_ : ∀ {e f k e' f' k'} (c : chain e f k) (c' : chain e' f' k') → Set where
+    =c=z : ∀ {e f} {p q : e # f} → p ∷ nil =c= q ∷ nil
+    =c=s : ∀ {e f g m m'} {p q : e # f} (c : chain f g m) (c' : chain f g m') → c =c= c' → (p ∷ c) =c= (q ∷ c')
+
   data _∈_ : ∀ {e f n} (x : O) (c : chain e f n) → Set where
     ∈z : ∀ {e f n} (c : chain e f n) → e ∈ c
     ∈s : ∀ {e f n x y} (c : chain e f n) (q : y # e) (p : x ∈ c) → x ∈ (q ∷ c)
