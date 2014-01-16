@@ -4,6 +4,8 @@ module Misc where
   open import Data.Empty
   open import Data.Sum
   
+  open Data.Nat.≤-Reasoning
+
   module EvenOdd where
     data Even : ℕ → Set
     data Odd : ℕ → Set 
@@ -50,4 +52,23 @@ module Misc where
   +-com zero zero = refl
   +-com zero (suc b) rewrite +-com b 0 = refl
   +-com (suc a) b = trans (cong suc (+-com a b)) (+-suc b a)
+
+  n≤suc : ∀ {n} → n ≤ suc n
+  n≤suc {zero} = z≤n
+  n≤suc {suc n} = s≤s n≤suc
+ 
+  div2 : ∀ n → Even n → ℕ
+  div2 .0 evenZero = 0
+  div2 .(suc (suc n)) (oddEven (evenOdd {n} x)) = suc (div2 n x)
   
+  div2*2 : ∀ n → (p : Even n) → 2 * (div2 n p) ≡ n
+  div2*2 .0 evenZero = refl
+  div2*2 .(suc (suc n)) (oddEven (evenOdd {n} x))
+               rewrite sym(+-suc (div2 n x) (div2 n x + 0)) =
+                                       cong suc (cong suc (div2*2 n x))
+
+  div2≤ : ∀ n → (p : Even n) → (div2 n p) ≤ n
+  div2≤ .0 evenZero = z≤n
+  div2≤ .(suc (suc n)) (oddEven (evenOdd {n} x))
+              = s≤s (begin div2 n x ≤⟨ div2≤ n x ⟩ relTo (n≤suc))
+ 
