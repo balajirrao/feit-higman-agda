@@ -76,3 +76,17 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set)
                       (shortest-irred (f#g ∷ g#h ∷ c) (s≤s (s≤s z≤n))
                       (λ {m} c' z → sc (e#f ∷ c') (s≤s z)))
                       (λ e#g → ⊥-elim (sc (e#g ∷ g#h ∷ c) m≤m))
+
+  mid : ∀ {e f n} (c : chain e f n) (p : Even n) → O
+  mid c p = nth c (div2≤ p)
+
+  take-left : ∀ {e f n m} (c : chain e f n) (p : m ≤ n) → chain e (nth c p) m
+  take-left c z≤n = nil
+  take-left (e#f ∷ c) (s≤s p) = e#f ∷ take-left c p
+
+  take-right : ∀ {e f n m} (c : chain e f n) (p : m ≤ n) → chain (nth c p) f (n ∸ m) 
+  take-right nil z≤n = nil
+  take-right (e#f ∷ c) z≤n = e#f ∷ c
+  take-right (e#f ∷ c) (s≤s p) = take-right c p
+
+ 
