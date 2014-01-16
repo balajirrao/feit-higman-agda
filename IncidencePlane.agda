@@ -17,78 +17,60 @@ module IncidencePlane where
   postulate
     P L : Set
     
-  O : Set
-  O = P ⊎ L
- 
-  isP : O → Bool
-  isP (inj₁ x) = true
-  isP (inj₂ y) = false
-
-  isL : O → Bool
-  isL (inj₁ x) = false
-  isL (inj₂ y) = true
-
-  infix 3 _#_
+  data O : Set where
+    pt : (p : P) → O
+    ln : (l : L) → O
   
-  postulate
-    _#_ : O → O → Set
-    eq-#-P : {e f : P} → .((inj₁ e) # (inj₁ f)) → e ≡ f
-    eq-#-L : {e f : L} → .((inj₂ e) # (inj₂ f)) → e ≡ f
+  alt-type : O → Set
+  alt-type (pt _) = L
+  alt-type (ln _) = P
+
+  alt-inj : (x : O) → (alt-type x) → O
+  alt-inj (pt _) = ln
+  alt-inj (ln _) = pt
+
+  data _#_ : O → O → Set where
+    #symP : ∀ {p l} → (pt p) # (ln l) → (ln l) # (pt p)
+    #symL : ∀ {l p} → (ln l) # (pt p) → (pt p) # (ln l) 
+    #refl : ∀ {e} → e # e  
+
+  #sym-all : ∀ {e f} → e # f → f # e
+  #sym-all {pt .p₁} {pt p₁} #refl = #refl
+  #sym-all {pt p} {ln l} p₁ = #symP p₁
+  #sym-all {ln l} {pt p} p₁ = #symL p₁
+  #sym-all {ln .l₁} {ln l₁} #refl = #refl
 
   import IncidenceGeometry as IG
-  open IG O _#_
- 
-  irred-PP-even : ∀ {p p'} → (c : chain (inj₁ p) (inj₁ p')) → irred c → Even (len c)
-  irred-PL-odd : ∀ {p l} → (c : chain (inj₁ p) (inj₂ l)) → irred c → Odd (len c)
-
-  irred-PP-even [ ._ ] _ = evenZero
-  irred-PP-even {_} {p} ((c ∷ .(inj₁ p)) {q}) ic with (last c)
-  ... | inj₁ x = ⊥-elim (irred-∷ c (inj₁ p) ic (cong inj₁ (eq-#-P q)))
-  ... | inj₂ y = oddEven (irred-PL-odd c (irred-init (c ∷ inj₁ p) tt ic))
-
-  irred-PL-odd {_} {l} ((c ∷ .(inj₂ l)) {q}) ic with (last c)
-  ... | inj₁ _ = evenOdd (irred-PP-even c (irred-init (c ∷ inj₂ l) tt ic))
-  ... | inj₂ y = ⊥-elim (irred-∷ c (inj₂ l) ic (cong inj₂ (eq-#-L q)))
-
-  irred-LL-even : ∀ {l l'} → (c : chain (inj₂ l) (inj₂ l')) → irred c → Even (len c)
-  irred-LL-even [ .(inj₂ _) ] x = evenZero
-  irred-LL-even {_} {l'} ((c ∷ .(inj₂ l')) {q} ) ic with (last c)
-  ... | inj₁ _ rewrite (len-rev c) = oddEven (irred-PL-odd (rev c) 
-                                      (irred-rev c (irred-init (c ∷ inj₂ l')  tt ic)))
-  ... | inj₂ _ = ⊥-elim (irred-∷ c (inj₂ l') ic (cong inj₂ (eq-#-L q)))
- 
-  shortest-PP-even : ∀ {p p'} → (c : chain (inj₁ p) (inj₁ p')) →
-                       shortest c → Even (len c)
-  shortest-PP-even c sc = irred-PP-even c (shortest-irred c sc)
-
-  shortest-PL-odd : ∀ {p l} → (c : chain (inj₁ p) (inj₂ l)) →
-                      shortest c → Odd (len c)
-  shortest-PL-odd c sc = irred-PL-odd c (shortest-irred c sc)
-
-  module GenPolygon (n : ℕ) where
-    postulate
-      A₁ : ∀ (e f : O) → ∃ {A = chain e f} (λ c → (len  c) ≤ n)
-      A₂ : ∀ (e f : O) → (c₁ : chain e f) (c₂ : chain e f) → (len c₁ < n) → (len c₂ < n) → (c₁ ≡ c₂)
+  open IG O _#_ #refl #sym-all
   
-    open Data.Nat.≤-Reasoning
- 
-    len-shortest-≤n : ∀ {e f} → (c : chain e f) → shortest c → len c > n → ⊥
-    len-shortest-≤n {e} {f} c sc l with proj₁ (A₁ e f) | proj₂(A₁ e f) 
-    ... | c' | p  = sc c' (begin suc (len c') ≤⟨ s≤s p ⟩ (relTo l))
+  data alt-chain : O → O → ℕ → Set where
+    alt2 : ∀ {x y} .(p : x # (alt-inj x y)) → alt-chain x (alt-inj x y) 1
+    alts : ∀ {e f g k} .(p : e # (alt-inj e f)) (c : alt-chain (alt-inj e f) g k) → alt-chain e g (suc k)
 
-    nondegen : ∀ {e f} → Set
-    nondegen {e} {f} = ∃ {A = chain e f} (λ c → shortest c × (len c) ≡ n)
+  iz-alt : ∀ {e f g} (e#f : e # f) (f#g : f # g) (¬e#g : e # g → ⊥) → alt-chain e g 2
+  iz-alt (#symP p₁) (#symL q) r = alts (#symP p₁) (alt2 (#symL q))
+  iz-alt (#symP p₁) #refl r = ⊥-elim (r (#symP p₁))
+  iz-alt (#symL p₁) (#symP q) r = alts (#symL p₁) (alt2 (#symP q))
+  iz-alt (#symL p₁) #refl r = ⊥-elim (r (#symL p₁))
+  iz-alt #refl (#symP q) r = ⊥-elim (r (#symP q))
+  iz-alt #refl (#symL q) r = ⊥-elim (r (#symL q))
+  iz-alt #refl #refl r = ⊥-elim (r #refl)
 
-    closed : ∀ {e f} (c : chain e f) → Set
-    closed {.f} {f} IG.[ .f ] = ⊥
-    closed {e} {f} (c IG.∷ .f) = f ≡ e
+  irred-alt : ∀ {e f k} (c : chain e f k) (ic : irred c) → alt-chain e f k
+  irred-alt ._ (iz e#f f#g ¬e#g) = iz-alt e#f f#g ¬e#g
+  irred-alt ._ (is (#symP e#f) c _ ic _) = alts (#symP e#f) (irred-alt c ic)
+  irred-alt ._ (is (#symL e#f) c _ ic _) = alts (#symL e#f) (irred-alt c ic)
+  irred-alt ._ (is #refl nil _ () _)
+  irred-alt ._ (is #refl (e#f ∷ c) (s≤s z≤n) _ ¬e#c) = ⊥-elim (¬e#c e#f)
 
-    closed-even : ∀ {e} → (c : chain e e) → irred c → Even (len c)
-    closed-even {inj₁ _} c = irred-PP-even c
-    closed-even {inj₂ _} c = irred-LL-even c    
+  alt-pp-chain-even : ∀ {p p' k} (c : alt-chain (pt p) (pt p') k) → Even k
+  alt-lp-chain-odd : ∀ {l p k} (c : alt-chain (ln l) (pt p) k) → Odd k
 
-    mid : ∀ {e f} → (c : chain e f) → Even (len c) → O
-    mid [ e ] p = e
-    mid ([ e ] ∷ f) (oddEven ())
-    mid ([ e ] ∷ f ∷ g) p = f
-    mid (((c ∷ f) {c#f}) ∷ g) (oddEven (evenOdd p)) = mid (init ((c ∷ f) {c#f}) tt) p
+  alt-pp-chain-even (alts p₁ c) = oddEven (alt-lp-chain-odd c)
+  alt-lp-chain-odd (alt2 _) = oddOne
+  alt-lp-chain-odd (alts _ c) = evenOdd (alt-pp-chain-even c)
+
+  alt-ll-chain-even :  ∀ {l l' k} (c : alt-chain (ln l) (ln l') k) → Even k
+  alt-ll-chain-even (alts _ (alt2 _)) = oddEven (evenOdd evenZero)
+  alt-ll-chain-even (alts _ (alts _ c)) = evenSuc (alt-ll-chain-even c)
+
