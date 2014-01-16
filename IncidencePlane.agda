@@ -74,3 +74,7 @@ module IncidencePlane where
   alt-ll-chain-even (alts _ (alt2 _)) = oddEven (evenOdd evenZero)
   alt-ll-chain-even (alts _ (alts _ c)) = evenSuc (alt-ll-chain-even c)
 
+  module GenPolygon (n : ℕ) where
+    postulate
+      A₁ : ∀ {k} (e f : O) → ∃ {A = chain e f k} (λ c → k ≤ n)
+      A₂ : ∀ {e f k k'} (c : chain e f k) (c' : chain e f k') (p : k < n) (q : k' < n) → (c =c= c')
