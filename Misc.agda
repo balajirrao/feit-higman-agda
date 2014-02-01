@@ -57,6 +57,10 @@ module Misc where
   n≤suc {zero} = z≤n
   n≤suc {suc n} = s≤s n≤suc
  
+  n≤pred : ∀ {n} → pred n ≤ n
+  n≤pred {zero} = z≤n
+  n≤pred {suc n} = n≤suc
+
   div2 : ∀ {n} → Even n → ℕ
   div2 evenZero = zero
   div2 (evenSuc q) = suc (div2 q) 
@@ -71,3 +75,4 @@ module Misc where
   div2≤ evenZero = z≤n
   div2≤ (evenSuc {n} x)
               = s≤s (begin div2 x ≤⟨ div2≤ x ⟩ relTo (n≤suc))
+
