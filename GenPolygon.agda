@@ -46,7 +46,7 @@ module GenPolygon (P L : Set) (n : ℕ) where
   -- That a shortest chain exists between any two elements of O and they have length lambda e f
   postulate
     lambda : (e f : O) → ℕ
-    shortest-chain : ∀ {e f} → Σ (chain e f) (λ c → (shortest c) × (len c ≡ lambda e f))
+    lambda-shortest : ∀ {e f} (c : chain e f) → (len c ≡ (lambda e f)) → shortest c
 
   -- A₂ : There exists at most one irreducible chain of length less than n from e to f
   postulate
