@@ -29,8 +29,8 @@ module IncidenceGeometry where
   postulate
     _#_ : Rel O Level.zero
     #sym : ∀ {e f} → e # f → f # e
-    #refl : ∀ {e} → e # e
-
+    #refl : ∀ {e} → e # e    
+  
   infixr 5 _∷_   
   data chain : O → O → Set where
     [_] : (e : O) → chain e e
@@ -163,6 +163,33 @@ module IncidenceGeometry where
                                                            
    
   open ShortestPredicate public
+
+  
+  -- upper bound for λ (e₁, f) in terms of λ (e, f) when e # e₁
+  lambda-ub : ∀ {e e₁ f} {e<>e₁ : e ≢ e₁} {e#e₁ : e # e₁} → lambda e₁ f > suc (lambda e f) → ⊥
+  lambda-ub {e} {e₁} {f} {e<>e₁} {e#e₁} p = lambda-shortest
+                                       (_∷_ e₁ {{e<>f = λ eq → e<>e₁ (sym eq)}}
+                                            {{e#f = #sym e#e₁}} (sc e f))
+                                              (begin
+                                                suc (suc (len (sc e f)))
+                                                  ≡⟨ cong suc (cong suc sc-len-lambda) ⟩
+                                                suc (suc (lambda e f))
+                                                  ≤⟨ p ⟩
+                                                lambda e₁ f ∎)
+
+  -- lower bound for λ (e₁, f) in terms of λ (e, f) when e # e₁
+  lambda-lb : ∀ {e e₁ f} {e<>e₁ : e ≢ e₁} {e#e₁ : e # e₁} (l>1 : lambda e f ≥ 1) →
+                                                          lambda e₁ f < pred (lambda e f) → ⊥
+  lambda-lb {e} {e₁} {f} {e<>e₁} {e#e₁} l>1 p = lambda-shortest (e ∷ sc e₁ f)
+                                       (begin
+                                         suc (suc (len (sc e₁ f)))
+                                           ≡⟨ cong suc (cong suc sc-len-lambda) ⟩
+                                         suc (suc (lambda e₁ f))
+                                           ≤⟨ s≤s p ⟩
+                                         suc (pred (lambda e f))
+                                           ≡⟨ suc∘pred≡id l>1 ⟩
+                                         lambda e f ∎)
+
 {-
 
   mid : ∀ {e f n} (c : chain e f n) (p : Even n) → O
