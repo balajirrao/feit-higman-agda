@@ -38,6 +38,12 @@ module Misc where
     evenOddDec (suc m) | inj₁ x = inj₂ (evenOdd x)
     evenOddDec (suc m) | inj₂ y = inj₁ (oddEven y)
 
+    odd≡ : ∀ {x y} → x ≡ y → Odd x → Odd y
+    odd≡ refl p = p
+
+    even≡ : ∀ {x y} → x ≡ y → Even x → Even y
+    even≡ refl p = p
+
   open EvenOdd public
 
   m≤m : ∀ {m} → m ≤ m
@@ -57,14 +63,34 @@ module Misc where
   n≤suc {zero} = z≤n
   n≤suc {suc n} = s≤s n≤suc
  
+  suc-≤ : ∀ {x y} → suc x ≤ suc y → x ≤ y
+  suc-≤ (s≤s p) = p
+
   n≤pred : ∀ {n} → pred n ≤ n
   n≤pred {zero} = z≤n
   n≤pred {suc n} = n≤suc
+
+  ≤≡ : ∀ {x y z} → x ≡ y → z ≤ x → z ≤ y
+  ≤≡ refl q = q
+  
+  ≡⇒≤ : ∀ {x y} → x ≡ y → x ≤ y
+  ≡⇒≤ refl = m≤m
 
   div2 : ∀ {n} → Even n → ℕ
   div2 evenZero = zero
   div2 (evenSuc q) = suc (div2 q) 
  
+  ≤≢⇒< : ∀ {x y} → x ≤ y → x ≢ y → x < y
+  ≤≢⇒< {.0} {zero} z≤n q = ⊥-elim (q refl)
+  ≤≢⇒< {.0} {suc y} z≤n q = s≤s z≤n
+  ≤≢⇒< (s≤s p) q = s≤s (≤≢⇒< p (λ z → q (cong suc z)))
+
+  ≤-≥⇒≡ : ∀ {x y} → x ≤ y → y ≤ x → x ≡ y
+  ≤-≥⇒≡ z≤n z≤n = refl
+  ≤-≥⇒≡ (s≤s p) (s≤s q) = cong suc (≤-≥⇒≡ p q)
+
+  suc∘pred≡id : ∀ {x} → (x > 0) → (suc (pred x)) ≡ x
+  suc∘pred≡id (s≤s g) = refl
 
   div2*2 : ∀ {n} (p : Even n) → (div2 p) * 2 ≡ n
   div2*2 evenZero = refl
