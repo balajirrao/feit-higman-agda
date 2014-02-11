@@ -1,17 +1,35 @@
-module IncidenceGeometry (O : Set) (_#_ : O → O → Set)
-                         (#-refl : ∀ {e} → e # e)
-                         (#-sym : ∀ {e f} → e # f → f # e) where
+module IncidenceGeometry where
   open import Data.Nat
+  open import Data.Nat.Properties
   open import Data.Unit using (⊤; tt)
   open import Data.Empty
   open import Data.Product
   open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; _≢_; subst; subst₂; sym; trans)
+  open import Relation.Binary
   open import Data.Maybe
   open import Data.Sum
-  open import Data.Bool
+  --open import Data.Bool
   open import Relation.Binary
   open import Relation.Nullary.Core
   open import Misc
+
+  open import Function
+
+  open Data.Nat.≤-Reasoning
+
+  import Level
+
+  postulate
+    P L : Set
+
+  data O : Set where
+    pt : P → O
+    ln : L → O
+
+  postulate
+    _#_ : Rel O Level.zero
+    #sym : ∀ {e f} → e # f → f # e
+    #refl : ∀ {e} → e # e
 
   infixr 5 _∷_   
   data chain : O → O → Set where
@@ -74,8 +92,14 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set)
   -- Shortest chain --
 
   module ShortestPredicate where
+    postulate
+      lambda : (e f : O) → ℕ
+      sc : (e f : O) → (chain e f)
+      sc-len-lambda : ∀ {e f} → (len (sc e f)) ≡ (lambda e f)
+      lambda-shortest : ∀ {e f} (c : chain e f) → (lambda e f) ≯ (len c)
+    
     shortest : ∀ {e f} → (c : chain e f) → Set
-    shortest {e} {f} c = (c' : chain e f) → ((len c) ≯ (len c'))
+    shortest {e} {f} c = (len c) ≡ lambda e f
 
     -- Couple of obvious functions to deal with buggy pattern matching lambdas
     
@@ -84,22 +108,60 @@ module IncidenceGeometry (O : Set) (_#_ : O → O → Set)
 
     private G : ∀ {e f g} → (p : e ≡ f) (c : chain f g) → len (F p c) ≤ suc (len c)
             G refl c = n≤suc
-  
+
+    tail-shortest : ∀ {e f g} .{{e#f : e # f}} .{{e<>f : e ≡ f → ⊥}}
+                      {c : chain f g} → shortest (e ∷ c) → shortest c
+    tail-shortest {e} {f} {g} {c = c} s with len c ≤? lambda f g
+    tail-shortest {e} {f} {g} {c = c} s | yes p with len c ≟ lambda f g
+    tail-shortest s | yes p₁ | yes p = p
+    tail-shortest {_} {f} {g} {c = c} s | yes p≤ | no ¬p≡ = ⊥-elim (lambda-shortest c
+                                                                   (≤≢⇒< (
+                                                                     begin
+                                                                       len c
+                                                                         ≤⟨ p≤ ⟩
+                                                                       --len (sc f g)
+                                                                         --≡⟨ sc-len-lambda ⟩
+                                                                       (lambda f g ∎))
+                                                                   ( ¬p≡ )))
+    tail-shortest {e} {f} {g} {c = c} s | no ¬p =  ⊥-elim (lambda-shortest (e ∷ sc f g)
+                                                 (begin
+                                                   suc (suc (len (sc f g)))
+                                                     ≡⟨ cong suc (cong suc sc-len-lambda) ⟩
+                                                   suc (suc (lambda f g))
+                                                     ≤⟨ s≤s (≰⇒> ¬p) ⟩
+                                                   suc (len c)
+                                                     ≡⟨ s ⟩
+                                                   --len (sc e g)
+                                                    --≡⟨ sc-len-lambda ⟩
+                                                   lambda e g
+                                                 ∎))
+   
     shortest-irred : ∀ {e f} (c : chain e f) (p : (len c) ≥ 2) → shortest c → irred c
-    shortest-irred [ _ ] () sc
-    shortest-irred (e ∷ [ _ ]) (s≤s ()) s
-    shortest-irred (e ∷ f ∷ [ g ]) (s≤s (s≤s z≤n)) sc = iz e f g
-                                   (λ e#g → sc (_∷_ e
-                                     {{e<>f = λ e≡f → sc (F e≡f [ g ]) (s≤s (G e≡f [ g ]))}}
-                                     {{e#f = e#g}} [ g ]) (s≤s (s≤s z≤n)))
+    shortest-irred {.f} {f} [ .f ] () sc
+    shortest-irred (_ ∷ [ _ ]) (s≤s ()) sc
+    shortest-irred (e ∷ f ∷ [ g ] ) (s≤s (s≤s z≤n)) sc = iz e f g
+                                    (λ e#g → lambda-shortest (_∷_ e
+                                      {{e<>f = λ e≡f →
+                                        lambda-shortest (F e≡f [ g ])
+                                          (≤≡ sc (s≤s (G e≡f [ g ])))}}
+                                      {{e#f = e#g}}
+                                      [ g ]) (≡⇒≤ sc))
+    shortest-irred {.e} {h} (e ∷ f ∷ g ∷ c) (s≤s (s≤s z≤n)) s = is e (f ∷ g ∷ c) (s≤s z≤n)
+                                                           (shortest-irred (f ∷ g ∷ c) (s≤s (s≤s z≤n))
+                                                             (tail-shortest {e} {f} {h} {f ∷ g ∷ c} s))
+                                                           (λ e#g → lambda-shortest (_∷_ e
+                                                             {{e<>f = λ e≡g → lambda-shortest (F e≡g (g ∷ c))
+                                                               (begin
+                                                                 suc (len (F e≡g (g ∷ c)))
+                                                                   ≤⟨ s≤s (G e≡g (g ∷ c)) ⟩
+                                                                suc (suc (suc (len c)))
+                                                                   ≡⟨ s ⟩
+                                                                 lambda e h ∎
+                                                             ) }}
 
-    shortest-irred (e ∷ f ∷ g ∷ c) (s≤s (s≤s z≤n)) sc = is e (f ∷ g ∷ c) (s≤s z≤n)
-                            (shortest-irred (f ∷ g ∷ c) (s≤s (s≤s z≤n))
-                            (λ c' z → sc (e ∷ c') (s≤s z)))
-                            (λ e#g → sc (_∷_ e
-                               {{e<>f = λ e≡f → sc (F e≡f (g ∷ c)) (s≤s (G e≡f (g ∷ c)))}}
-                               {{e#f = e#g}} (g ∷ c)) m≤m) 
-
+                                                             {{e#f = e#g}} (g ∷ c)) (≡⇒≤ s))
+                                                           
+   
   open ShortestPredicate public
 {-
 
