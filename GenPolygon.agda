@@ -187,3 +187,6 @@ module GenPolygon where
     B₁ : (l : L) → Bijection (setoid (P# l)) (setoid (Fin (s + 1)))
     B₂ : (p : P) → Bijection (setoid (L# p)) (setoid (Fin (t + 1)))
 
+  -- There exists a f with lambda e f ≡ n
+  postulate
+    GP : (e : O) → Σ O (λ f → lambda e f ≡ n)
