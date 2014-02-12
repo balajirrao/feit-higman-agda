@@ -101,13 +101,13 @@ module Lemma-2-1-new where
                                                      ≡⟨ sym x ⟩
                                                    lambda e₁ f ∎))
                                                                                                               
-  f : ∀ {f} (e : P) (λ≡n : lambda (pt e) f ≡ n) → Σ (chain (pt e) f) (λ c → len c ≡ n) → L# e
-  f _ λ≡n ([ ._ ] , len≡n) = ⊥-elim (n≰2 (<-≡-trans (cong suc (cong suc len≡n)) (≤-steps 2 m≤m)))
-  f _ _ (_∷_ {pt x} ._ {{e<>f}} {{e#f}} c , len≡n) = ⊥-elim (A-pt#eq e#f e<>f)
-  f _ _ (_∷_ {ln f} ._ {{e<>f}} {{e#f}} c , len≡n) = f ⟦ e#f ⟧ 
+  f : ∀ {f} {e : P} {λ≡n : lambda (pt e) f ≡ n} → Σ (chain (pt e) f) (λ c → len c ≡ n) → L# e
+  f {λ≡n = λ≡n} ([ ._ ] , len≡n) = ⊥-elim (n≰2 (<-≡-trans (cong suc (cong suc len≡n)) (≤-steps 2 m≤m)))
+  f (_∷_ {pt x} ._ {{e<>f}} {{e#f}} c , len≡n) = ⊥-elim (A-pt#eq e#f e<>f)
+  f (_∷_ {ln f} ._ {{e<>f}} {{e#f}} c , len≡n) = f ⟦ e#f ⟧ 
 
-  f-inverse : ∀ {f} (e : P) → (λ≡n : lambda (pt e) f ≡ n) → L# e → Σ (chain (pt e) f) (λ c → len c ≡ n)
-  f-inverse {f} e λ≡n (e₁ ⟦ p#l ⟧) = pt e ∷ sc (ln e₁) f , 
+  f-inverse : ∀ {f} {e : P} {λ≡n : lambda (pt e) f ≡ n} → L# e → Σ (chain (pt e) f) (λ c → len c ≡ n)
+  f-inverse {f} {e} {λ≡n} (e₁ ⟦ p#l ⟧) = pt e ∷ sc (ln e₁) f , 
                                           (≡begin
                                             suc (len (sc (ln e₁) f))
                                               ==⟨ cong suc sc-len-lambda ⟩
