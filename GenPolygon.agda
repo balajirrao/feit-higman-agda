@@ -154,6 +154,10 @@ module GenPolygon where
   ChainsWithProperty : (e f : O) (prop : chain e f → Set) → Setoid _ _
   ChainsWithProperty e f prop = record { Carrier = Σ (chain e f) prop; _≈_ = _≈_; isEquivalence = ≈-equiv }
  
+  chains≡⇒≈ : ∀ {e f} {prop : chain e f → Set} {c c' : Σ (chain e f) prop} →
+                                               (proj₁ c) ≡ proj₁ c' → c ≈ c'
+  chains≡⇒≈ {_} {_} {_} {(._ , _)} {(_ , _)} refl = refl
+
   -- A₂ : There exists at most one irreducible chain of length less than n from e to f
   postulate
     A₁ : (e f : O) → Σ (chain e f) (λ c → len c ≤ n)
