@@ -47,22 +47,18 @@ module Lemma-2-1-new where
   -- ∙ x is not equal to b
   -- ∙ x is not equal to c
   -- ⇒ Then conclude x is equal to a
-  x≡a : ∀ {a b c x} (b≥1 : b ≥ 1) (p : a ≡ pred b) (q : c ≡ suc b)
-         (x≮a : x ≮ a) (x≯c : x ≯ c) (x≢b : x ≢ b) (x≢c : x ≢ c) → x ≡ a
-  x≡a {a} {zero} () p q x≮a x≯c x≢b x≢c
-  x≡a {zero} {suc .0} {zero} b≥1 refl () x≮a x≯c x≢b x≢c
-  x≡a {zero} {suc .0} {suc .1} {x} (s≤s z≤n) refl refl x≮a x≯c x≢b x≢c with compare x 0
-  x≡a {zero} {suc ._} {suc ._} (s≤s z≤n) refl refl x≮a x≯c x≢b x≢c | equal .0 = refl
-  x≡a {zero} {suc ._} {suc ._} (s≤s z≤n) refl refl x≮a x≯c x≢b x≢c | greater .0 zero = ⊥-elim (x≢b refl)
-  x≡a {zero} {suc ._} {suc ._} (s≤s z≤n) refl refl x≮a x≯c x≢b x≢c | greater .0 (suc zero) = ⊥-elim (x≢c refl)
-  x≡a {zero} {suc ._} {suc ._} (s≤s z≤n) refl refl x≮a x≯c x≢b x≢c | greater .0 (suc (suc k)) = ⊥-elim (x≯c (s≤s (s≤s (s≤s z≤n))))
-  x≡a {suc a} {suc b} {zero} b≥1 p () x≮a x≯c x≢b x≢c
-  x≡a {suc a} {suc b} {suc c} {zero} b≥1 p q x≮a x≯c x≢b x≢c = ⊥-elim (x≮a (s≤s z≤n))
-  x≡a {suc a} {suc .(suc a)} {suc c} {suc x} (s≤s z≤n) refl q x≮a x≯c x≢b x≢c =
-                                     cong suc (x≡a (s≤s z≤n) refl
-                                              (cong pred q)
-                                              (λ d → x≮a (s≤s d))
-                                              (λ d → x≯c (s≤s d))
-                                              (λ d → x≢b (cong suc d))
-                                              (λ d → x≢c (cong suc d)))
+  x≡pred : ∀ {b} (x : ℕ) (b≥1 : b ≥ 1) (x≮a : x ≮ (pred b)) (x≯c : x ≯ (suc b))
+                              (x≢b : x ≢ b) (x≢c : x ≢ (suc b)) → x ≡ pred b
+  x≡pred {zero} x () x≮a x≯c x≢b x≢c
+  x≡pred {suc zero} x (s≤s z≤n) x≮a x≯c x≢b x≢c with compare x 0
+  x≡pred {suc zero} .0 (s≤s z≤n) x≮a x≯c x≢b x≢c | equal .0 = refl
+  x≡pred {suc zero} .1 (s≤s z≤n) x≮a x≯c x≢b x≢c | greater .0 zero = ⊥-elim (x≢b refl)
+  x≡pred {suc zero} .2 (s≤s z≤n) x≮a x≯c x≢b x≢c | greater .0 (suc zero) = ⊥-elim (x≢c refl)
+  x≡pred {suc zero} .(suc (suc (suc k))) (s≤s z≤n) x≮a x≯c x≢b x≢c | greater .0 (suc (suc k)) = ⊥-elim (x≯c (s≤s (s≤s (s≤s z≤n))))
+  x≡pred {suc (suc b)} zero (s≤s z≤n) x≮a x≯c x≢b x≢c = ⊥-elim (x≮a (s≤s z≤n))
+  x≡pred {suc (suc b)} (suc x) b≥1 x≮a x≯c x≢b x≢c = cong suc (x≡pred {suc b} x (s≤s z≤n)
+                                                              (λ z → x≮a (s≤s z))
+                                                              (λ z → x≯c (s≤s z))
+                                                              (λ z → x≢b (cong suc z))
+                                                              (λ z → x≢c (cong suc z))) 
 
