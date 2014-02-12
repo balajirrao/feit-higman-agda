@@ -33,7 +33,7 @@ module GenPolygon where
   n = reveal _n
   
   postulate
-    n>2 : n > 2
+    n>2 : n ≮ 3
     s t : ℕ
   
   -- Axioms for incidence plane. Two points (or lines) can be incident only when they are equal
