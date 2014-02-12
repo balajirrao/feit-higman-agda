@@ -104,13 +104,19 @@ module Lemma-2-1-new where
                                                    lambda e₁ f ∎))
  
  -- F and F-inverse build correspondence between chains of length n and lines incident with e
-  F : ∀ {f} {e : P} {λ≡n : lambda (pt e) f ≡ n} → Σ (chain (pt e) f) (λ c → len c ≡ n) → L# e
+  F : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → Σ (chain (pt e) f) (λ c → len c ≡ n) → L# e
   F {λ≡n = λ≡n} ([ ._ ] , len≡n) = ⊥-elim (n≢0 (sym len≡n))
   F (_∷_ {pt x} ._ {{e<>f}} {{e#f}} c , len≡n) = ⊥-elim (A-pt#eq e#f e<>f)
   F (_∷_ {ln f} ._ {{e<>f}} {{e#f}} c , len≡n) = f ⟦ e#f ⟧ 
 
-  F-inverse : ∀ {f} {e : P} {λ≡n : lambda (pt e) f ≡ n} → L# e → Σ (chain (pt e) f) (λ c → len c ≡ n)
-  F-inverse {f} {e} {λ≡n} (e₁ ⟦ p#l ⟧) = pt e ∷ sc (ln e₁) f , 
+  F-cong : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → {c c' : Σ (chain (pt e) f) (λ c → len c ≡ n)}
+                                                 → c ≈ c' → F {e} {f} {λ≡n} c ≡ F {e} {f} {λ≡n} c'
+  F-cong {e} {.(pt e)} {λ≡n} {.([ pt e ]) , proj₂} {[ .(pt e) ] , proj₄} refl = refl
+  F-cong {e} {f} {λ≡n} {.(pt e ∷ proj₃) , proj₂} {_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
+  F-cong {e} {f} {λ≡n} {.(pt e ∷ proj₃) , proj₂} {_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
+
+  F-inverse : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → L# e → Σ (chain (pt e) f) (λ c → len c ≡ n)
+  F-inverse {e} {f} {λ≡n} (e₁ ⟦ p#l ⟧) = (pt e) ∷ sc (ln e₁) f , 
                                           (≡begin
                                             suc (len (sc (ln e₁) f))
                                               ==⟨ cong suc sc-len-lambda ⟩
@@ -121,16 +127,27 @@ module Lemma-2-1-new where
                                             lambda (pt e) f
                                               ==⟨ λ≡n ⟩
                                             n ≡∎)
+  
+  F-inverse-cong : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → {i j : L# e} → i ≡ j → F-inverse {e} {f} {λ≡n} i ≈ F-inverse {e} {f} {λ≡n} j
+  F-inverse-cong {_} {_} {_} {.j} {j} refl = refl
 
   -- Proof that F is injective
-  F-inj : ∀ {f} {e : P} {λ≡n : lambda (pt e) f ≡ n} → (c c' : Σ (chain (pt e) f) (λ c → len c ≡ n)) →
-                      F {f} {e} {λ≡n} c ≡ F  {f} {e} {λ≡n} c' → (proj₁ c) ≡ (proj₁ c')
-  F-inj {.(pt e)} {e} ([ .(pt e) ] , len≡n) ([ .(pt e) ] , len≡n') refl = ⊥-elim (n≢0 (sym len≡n'))
-  F-inj {.(pt e)} {e} ([ .(pt e) ] , len≡n) (_∷_ .(pt e) {{e<>f}} {{e#f}} c' , len≡n') p = ⊥-elim (n≢0 (sym len≡n))
-  F-inj {.(pt e)} {e} (_∷_ .(pt e) {{e<>f}} {{e#f}} c , len≡n) ([ .(pt e) ] , len≡n') p = ⊥-elim (n≢0 (sym len≡n'))
-  F-inj {f} {e} (_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} c , len≡n) (_∷_ .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n') p = ⊥-elim (A-pt#eq e#f e<>f)
-  F-inj {f} {e} (_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} c , len≡n) (_∷_ {pt x₁} .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n') p = ⊥-elim (A-pt#eq e#f₁ e<>f₁)
-  F-inj {f} {e} (_∷_ {ln .x₁} .(pt e) {{e<>f}} {{e#f}} c , len≡n) (_∷_ {ln x₁} .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n') refl = --{!!}
-                     cong (λ x → _∷_ (pt e) {{e<>f = e<>f}} {{e#f = e#f}} x)
-                          (A₂ (c , (≡⇒≤ len≡n)) (c' , (≡⇒≤ len≡n')))
-
+  F-inj : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → {c c' : Σ (chain (pt e) f) (λ c → len c ≡ n)} →
+                      F {e} {f} {λ≡n} c ≡ F  {e} {f} {λ≡n} c' → c ≈ c'
+  F-inj {e} {.(pt e)} {_} {([ .(pt e) ] , len≡n)} {([ .(pt e) ] , len≡n')} refl = ⊥-elim (n≢0 (sym len≡n'))
+  F-inj {e} {.(pt e)} {_} {([ .(pt e) ] , len≡n)} {(_∷_ .(pt e) {{e<>f}} {{e#f}} c' , len≡n')} p = ⊥-elim (n≢0 (sym len≡n))
+  F-inj {e} {.(pt e)} {_} {(_∷_ .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {([ .(pt e) ] , len≡n')} p = ⊥-elim (n≢0 (sym len≡n'))
+  F-inj {e} {f} {_} {(_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {(_∷_ .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n')} p = ⊥-elim (A-pt#eq e#f e<>f)
+  F-inj {e} {f} {_} {(_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {(_∷_ {pt x₁} .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n')} p = ⊥-elim (A-pt#eq e#f₁ e<>f₁)
+  F-inj {e} {f} {_} {(_∷_ {ln .x₁} .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {(_∷_ {ln x₁} .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n')} refl = --{!!}
+                     chains≡⇒≈ (cong (λ x → _∷_ (pt e) {{e<>f = e<>f}} {{e#f = e#f}} x)
+                          (A₂ (c , (≡⇒≤ len≡n)) (c' , (≡⇒≤ len≡n'))))
+ 
+ 
+  lemma2-1 : ∀ {e f} → lambda (pt e) f ≡ n → Bijection (ChainsWithProperty (pt e) f (λ c → len c ≡ n)) (setoid (L# e))
+  lemma2-1 {e} {f} λ≡n = record { to = record { _⟨$⟩_ = F {e} {f} {λ≡n}; cong = F-cong };
+                                  bijective = record { injective = F-inj;
+                                                       surjective = record { from = record
+                                                                           { _⟨$⟩_ = F-inverse {e} {f} {λ≡n};
+                                                                             cong = F-inverse-cong {e} {f} {λ≡n} };
+                                                                           right-inverse-of = λ x → refl } } }
