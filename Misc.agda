@@ -89,6 +89,9 @@ module Misc where
   ≤-≥⇒≡ z≤n z≤n = refl
   ≤-≥⇒≡ (s≤s p) (s≤s q) = cong suc (≤-≥⇒≡ p q)
 
+  <-≡-trans : ∀ {x y z} →  x ≡ y → y ≥ z → x ≥ z
+  <-≡-trans refl q = q
+
   suc∘pred≡id : ∀ {x} → (x > 0) → (suc (pred x)) ≡ x
   suc∘pred≡id (s≤s g) = refl
 
