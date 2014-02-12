@@ -42,11 +42,11 @@ module Lemma-2-1-new where
                  = step0 (spc e f) (slc e₁ f)  (trans spc-len-lambda
                                                       (trans q (sym slc-len-lambda)))
   
-  lambda-unequal : ∀ {e e₁ f} → {e₁#e : e₁ # e} {e<>e₁ : e₁ ≢ e} → (lambda e f) ≡ (lambda e₁ f) → ⊥
+  lambda-unequal : ∀ {e e₁ f} → {e#e₁ : e # e₁} {e<>e₁ : e ≢ e₁} → (lambda e f) ≡ (lambda e₁ f) → ⊥
   lambda-unequal {pt x} {pt x₁} {f} {e₁#e} {e₁<>e} _ = A-pt#eq e₁#e e₁<>e 
   lambda-unequal {ln x} {ln x₁} {f} {e₁#e} {e₁<>e} _ = A-ln#eq e₁#e e₁<>e
-  lambda-unequal {pt x} {ln x₁} {f} {e₁#e} {e₁<>e} λ≡ = step1 (#sym e₁#e) λ≡
-  lambda-unequal {ln x} {pt x₁} {f} {e₁#e} {e₁<>e} λ≡ = step1 e₁#e (sym λ≡)
+  lambda-unequal {pt x} {ln x₁} {f} {e₁#e} {e₁<>e} λ≡ = step1 e₁#e λ≡
+  lambda-unequal {ln x} {pt x₁} {f} {e₁#e} {e₁<>e} λ≡ = step1 (#sym e₁#e) (sym λ≡)
 
   -- Given 3 contiguous natural numbers a b c and that if
   -- ∙ x is not greater than c
@@ -69,3 +69,35 @@ module Lemma-2-1-new where
                                                               (λ z → x≢b (cong suc z))
                                                               (λ z → x≢c (cong suc z))) 
 
+  n≥1 : n ≥ 1
+  n≥1 = begin 1 ≤⟨ s≤s z≤n ⟩ 3 ≤⟨ n>2 ⟩ (n ∎)
+
+  
+
+  lambda-pred : ∀ {e e₁ f} {e#e₁ : e # e₁} {e<>e₁ : e ≢ e₁} → lambda e f ≡ n → lambda e₁ f ≡ pred (lambda e f)
+  lambda-pred {e} {e₁} {f} {e#e₁} {e<>e₁} p = x≡pred {lambda e f} (lambda e₁ f)
+                                          (<-≡-trans p n≥1)
+                                          (λ x → lambda-ub {e<>e₁ = λ z → e<>e₁ (sym z)} {e#e₁ = #sym e#e₁}
+                                                 (begin
+                                                   suc (suc (lambda e₁ f))
+                                                     ≤⟨ s≤s x ⟩
+                                                   suc (pred (lambda e f))
+                                                     ≡⟨ suc∘pred≡id (<-≡-trans p n≥1) ⟩
+                                                   (lambda e f ∎)))
+                                          (λ x → lambda-lb {e<>e₁ = λ z → e<>e₁ (sym z)} {e#e₁ = #sym e#e₁}
+                                                 (begin
+                                                   1
+                                                     ≤⟨ <-≡-trans p n≥1 ⟩
+                                                   lambda e f
+                                                     ≤⟨ ≤-steps 2 m≤m ⟩
+                                                   suc (suc (lambda e f))
+                                                     ≤⟨ x ⟩ lambda e₁ f ∎) (pred-mono x))
+                                          (lambda-unequal {e#e₁ = #sym e#e₁} {e<>e₁ = λ z → e<>e₁ (sym z)})
+                                          (λ x → A₁'
+                                                 (begin
+                                                   suc (reveal _n)
+                                                     ≡⟨ cong suc (sym p) ⟩
+                                                   suc (lambda e f)
+                                                     ≡⟨ sym x ⟩
+                                                   lambda e₁ f ∎))
+                                                             
