@@ -166,7 +166,7 @@ module IncidenceGeometry where
 
   
   -- upper bound for λ (e₁, f) in terms of λ (e, f) when e # e₁
-  lambda-ub : ∀ {e e₁ f} {e<>e₁ : e ≢ e₁} {e#e₁ : e # e₁} → lambda e₁ f > suc (lambda e f) → ⊥
+  lambda-ub : ∀ {e e₁ f} .{e<>e₁ : e ≢ e₁} .{e#e₁ : e # e₁} → lambda e₁ f > suc (lambda e f) → ⊥
   lambda-ub {e} {e₁} {f} {e<>e₁} {e#e₁} p = lambda-shortest
                                        (_∷_ e₁ {{e<>f = λ eq → e<>e₁ (sym eq)}}
                                             {{e#f = #sym e#e₁}} (sc e f))
@@ -178,7 +178,7 @@ module IncidenceGeometry where
                                                 lambda e₁ f ∎)
 
   -- lower bound for λ (e₁, f) in terms of λ (e, f) when e # e₁
-  lambda-lb : ∀ {e e₁ f} {e<>e₁ : e ≢ e₁} {e#e₁ : e # e₁} (l>1 : lambda e f ≥ 1) →
+  lambda-lb : ∀ {e e₁ f} .{e<>e₁ : e ≢ e₁} .{e#e₁ : e # e₁} (l>1 : lambda e f ≥ 1) →
                                                           lambda e₁ f < pred (lambda e f) → ⊥
   lambda-lb {e} {e₁} {f} {e<>e₁} {e#e₁} l>1 p = lambda-shortest (e ∷ sc e₁ f)
                                        (begin

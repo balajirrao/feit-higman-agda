@@ -42,7 +42,7 @@ module Lemma-2-1-new where
                  = step0 (spc e f) (slc e₁ f)  (trans spc-len-lambda
                                                       (trans q (sym slc-len-lambda)))
   
-  lambda-unequal : ∀ {e e₁ f} → {e#e₁ : e # e₁} {e<>e₁ : e ≢ e₁} → (lambda e f) ≡ (lambda e₁ f) → ⊥
+  lambda-unequal : ∀ {e e₁ f} → .{e#e₁ : e # e₁} .{e<>e₁ : e ≢ e₁} → (lambda e f) ≡ (lambda e₁ f) → ⊥
   lambda-unequal {pt x} {pt x₁} {f} {e₁#e} {e₁<>e} _ = A-pt#eq e₁#e e₁<>e 
   lambda-unequal {ln x} {ln x₁} {f} {e₁#e} {e₁<>e} _ = A-ln#eq e₁#e e₁<>e
   lambda-unequal {pt x} {ln x₁} {f} {e₁#e} {e₁<>e} λ≡ = step1 e₁#e λ≡
@@ -74,7 +74,7 @@ module Lemma-2-1-new where
 
   
 
-  lambda-pred : ∀ {e e₁ f} {e#e₁ : e # e₁} {e<>e₁ : e ≢ e₁} → lambda e f ≡ n → lambda e₁ f ≡ pred (lambda e f)
+  lambda-pred : ∀ {e e₁ f} .{e#e₁ : e # e₁} .{e<>e₁ : e ≢ e₁} → lambda e f ≡ n → lambda e₁ f ≡ pred (lambda e f)
   lambda-pred {e} {e₁} {f} {e#e₁} {e<>e₁} p = x≡pred {lambda e f} (lambda e₁ f)
                                           (<-≡-trans p n≥1)
                                           (λ x → lambda-ub {e<>e₁ = λ z → e<>e₁ (sym z)} {e#e₁ = #sym e#e₁}
