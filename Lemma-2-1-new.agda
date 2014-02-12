@@ -35,11 +35,18 @@ module Lemma-2-1-new where
                                   (even≡ (sym p) (ll-len-even lc))
                                   (pl-len-odd pc)
     
-  -- An incident point-line pair can *not* have equal len-lambda distance to a common point
+  -- An incident point-line pair can *not* have equal shortest distances to a common point
+  -- because of even-odd polarity
   step1 : ∀ {e e₁ f} → .((pt e) # (ln e₁)) → (lambda (pt e) f) ≡ (lambda (ln e₁) f) → ⊥
   step1 {e} {e₁} {f} p q rewrite (lcc-id (sc (ln e₁) f))
                  = step0 (spc e f) (slc e₁ f)  (trans spc-len-lambda
                                                       (trans q (sym slc-len-lambda)))
+  
+  lambda-unequal : ∀ {e e₁ f} → {e₁#e : e₁ # e} {e<>e₁ : e₁ ≢ e} → (lambda e f) ≡ (lambda e₁ f) → ⊥
+  lambda-unequal {pt x} {pt x₁} {f} {e₁#e} {e₁<>e} _ = A-pt#eq e₁#e e₁<>e 
+  lambda-unequal {ln x} {ln x₁} {f} {e₁#e} {e₁<>e} _ = A-ln#eq e₁#e e₁<>e
+  lambda-unequal {pt x} {ln x₁} {f} {e₁#e} {e₁<>e} λ≡ = step1 (#sym e₁#e) λ≡
+  lambda-unequal {ln x} {pt x₁} {f} {e₁#e} {e₁<>e} λ≡ = step1 e₁#e (sym λ≡)
 
   -- Given 3 contiguous natural numbers a b c and that if
   -- ∙ x is not greater than c
