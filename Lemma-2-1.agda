@@ -15,7 +15,7 @@ open ≡-Reasoning renaming (begin_ to ≡begin_; _≡⟨_⟩_ to _==⟨_⟩_; _
 open import Relation.Nullary.Core
 
 open import Function.Equality hiding (setoid; cong)
-open import Function.Bijection
+open import Function.Inverse hiding (sym)
 
 open import Misc
 
@@ -149,13 +149,27 @@ module Lemma-2-1 where
                           (A₂ (c , (≡⇒≤ len≡n)) (c' , (≡⇒≤ len≡n'))))
  
 
-  lemma2-1 : ∀ {e f} → lambda (pt e) f ≡ n → Bijection (ChainsWithProperty (pt e) f (λ c → len c ≡ n)) (setoid (L# e))
-  lemma2-1 {e} {f} λ≡n = record { to = record { _⟨$⟩_ = F {e} {f} {λ≡n}; cong = F-cong };
+  F-left-inv : ∀ {e f} → (λ≡n : lambda (pt e) f ≡ n) (x : Σ (chain (pt e) f) (λ c → len c ≡ n)) → proj₁ (F-inverse {e} {f} {λ≡n} (F {e} {f} {λ≡n} x)) ≡ proj₁ (x)
+  F-left-inv {e} p ([ .(pt e) ] , proj₂) = ⊥-elim (n≢0 (sym proj₂))
+  F-left-inv {e} p (_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} proj₁ , proj₂) = ⊥-elim (A-pt#eq e#f e<>f)
+  F-left-inv {e} {f} p (_∷_ {ln e₁} .(pt e) {{e<>f}} {{e#f}} proj₁ , proj₂) = cong (_∷_ (pt e))
+             (A₂ ((sc (ln e₁) f) , (begin suc (len (sc (ln e₁) f)) ≡⟨ cong suc sc-len-lambda ⟩
+                                            suc (lambda (ln e₁) f) ≡⟨ cong suc (lambda-pred {(pt e)} {(ln e₁)} {f} {e#f} {e<>f} p) ⟩
+                                            suc (pred (lambda (pt e) f)) ≡⟨ suc∘pred≡id (<-≡-trans p n≥1) ⟩ lambda (pt e) f ≡⟨ p ⟩ (n ∎)))
+             (proj₁ , ≡⇒≤ proj₂)) 
+
+  lemma2-1 : ∀ {e f} → lambda (pt e) f ≡ n → Inverse (ChainsWithProperty (pt e) f (λ c → len c ≡ n)) (setoid (L# e))
+  lemma2-1 {e} {f} λ≡n = record { to = record { _⟨$⟩_ = F {e} {f} {λ≡n}; cong = F-cong }; from = record {
+                                              _⟨$⟩_ = F-inverse {e} {f} {λ≡n};
+                                              cong = F-inverse-cong {e} {f} {λ≡n} };
+                                              inverse-of = record { left-inverse-of = λ x → chains≡⇒≈ (F-left-inv λ≡n x); right-inverse-of = λ x → refl } }
+{-
+  {-lemma2-1 {e} {f} λ≡n = record { to = record { _⟨$⟩_ = F {e} {f} {λ≡n}; cong = F-cong };
                                   bijective = record { injective = F-inj;
                                                        surjective = record { from = record
                                                                            { _⟨$⟩_ = F-inverse {e} {f} {λ≡n};
                                                                              cong = F-inverse-cong {e} {f} {λ≡n} };
-                                                                           right-inverse-of = λ x → refl } } }
+                                                                           right-inverse-of = λ x → refl } } }-}
 
    
  -- F and F-inverse build correspondence between chains of length n and lines incident with e
@@ -206,14 +220,14 @@ module Lemma-2-1 where
   G-inj {e} {f} {λ≡n} {_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂} {_∷_ .(ln e) {{e<>f₁}} {{e#f₁}} proj₃ , proj₄} eq = ⊥-elim (A-ln#eq e#f e<>f)
  
 
-  lemma2-1a : ∀ {e f} → lambda (ln e) f ≡ n → Bijection (ChainsWithProperty (ln e) f (λ c → len c ≡ n)) (setoid (P# e))
-  lemma2-1a {e} {f} λ≡n = record { to = record { _⟨$⟩_ = G {e} {f} {λ≡n}; cong = G-cong };
+  lemma2-1a : ∀ {e f} → lambda (ln e) f ≡ n → Inverse (ChainsWithProperty (ln e) f (λ c → len c ≡ n)) (setoid (P# e))
+  lemma2-1a {e} {f} λ≡n = {!!} {-record { to = record { _⟨$⟩_ = G {e} {f} {λ≡n}; cong = G-cong };
                                   bijective = record { injective = G-inj;
                                                        surjective = record { from = record
                                                                            { _⟨$⟩_ = G-inverse {e} {f} {λ≡n};
                                                                              cong = G-inverse-cong {e} {f} {λ≡n} };
-                                                                           right-inverse-of = λ x → refl } } } 
+                                                                           right-inverse-of = λ x → refl } } } -}
 
-
+-}
 
 
