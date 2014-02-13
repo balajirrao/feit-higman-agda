@@ -66,23 +66,15 @@ module GenPolygon where
   l-len {e} [ .e ] = zero
   l-len {e} (_∷_ .e {{e#f}} c) = suc (p-len c)
 
-  -- These serve as instance arguments to functions needing a
-  -- proof of disequality of a point and a line
-  pl-neq : ∀ {e f} → .((pt e) ≡ (ln f)) → ⊥
-  pl-neq ()
- 
-  lp-neq : ∀ {e f} → .((ln e) ≡ (pt f)) → ⊥
-  lp-neq ()
-
   -- Convert a p-chain to a chain
   pc-to-c : ∀ {e f} (c : p-chain e f) → chain (pt e) f
   lc-to-c : ∀ {e f} (c : l-chain e f) → chain (ln e) f
   
   pc-to-c [ e ]  = [ (pt e) ] 
-  pc-to-c (e ∷ c) = (pt e) ∷ lc-to-c c
+  pc-to-c (_∷_ {e₁} e c) =  _∷_ (pt e) {{λ ()}} (lc-to-c c)
 
   lc-to-c [ e ] = [ (ln e) ]
-  lc-to-c (e ∷ c) = (ln e) ∷ pc-to-c c
+  lc-to-c (_∷_ {e₁} e c) = _∷_ (ln e) {{λ ()}} (pc-to-c c)
 
   -- Convert a chain to a pchain
   c-to-pc : ∀ {e f} (c : chain (pt e) f) → p-chain e f
@@ -105,11 +97,11 @@ module GenPolygon where
   lcc-id : ∀ {e f} → (c : chain (ln e) f) → lc-to-c (c-to-lc c) ≡ c
   pcc-id {e} [ .(pt e) ] = refl
   pcc-id {e} (_∷_ {pt f} .(pt e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-pt#eq e#f e<>f)
-  pcc-id {e} (_∷_ {ln x} .(pt e) c) = PropEq.cong (λ z → (_∷_ (pt e) {{e<>f = pl-neq}} z)) (lcc-id c) 
+  pcc-id {e} (_∷_ {ln x} .(pt e) c) = PropEq.cong (λ z → (_∷_ (pt e) z)) (lcc-id c) 
   lcc-id {e} [ .(ln e) ] = refl
-  lcc-id {e} (_∷_ {pt f} .(ln e) c) = PropEq.cong (λ z → (_∷_ (ln e) {{e<>f = lp-neq}} z)) (pcc-id c)
+  lcc-id {e} (_∷_ {pt f} .(ln e) c) = PropEq.cong (λ z → (_∷_ (ln e) z)) (pcc-id c)
   lcc-id {e} (_∷_ {ln f} .(ln e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-ln#eq e#f e<>f)
-    
+   
   pp-len-even : ∀ {e f} → (pc : p-chain e (pt f)) → Even (p-len pc)
   lp-len-odd : ∀ {e f} → (lc : l-chain e (pt f)) → Odd (l-len lc)
   pp-len-even {.f} {f} [ .f ] = evenZero
@@ -135,7 +127,24 @@ module GenPolygon where
 
   slc-len-lambda : ∀ {e f} → l-len (slc e f) ≡ (lambda (ln e) f)
   slc-len-lambda {e} {f} rewrite (lcc-id (sc (ln e) f)) = trans (llen-len (slc e f)) (trans (PropEq.cong len (lcc-id (sc (ln e) f))) sc-len-lambda)
+{-
 
+  pp-len-even : ∀ {e f} → (c : chain (pt e) (pt f)) → Even (len c)
+  lp-len-odd : ∀ {e f} → (c : chain (ln e) (pt f)) → Odd (len c)
+  pp-len-even {.f} {f} [ .( pt f) ] = evenZero
+  pp-len-even {e} (_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-pt#eq e#f e<>f)
+  pp-len-even {e} (_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} c) = oddEven (lp-len-odd c)
+  lp-len-odd {e} (_∷_ {pt x} .(ln e) {{e<>f}} {{e#f}} c) = evenOdd (pp-len-even c)
+  lp-len-odd {e} (_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-ln#eq  e#f e<>f)
+
+  ll-len-even : ∀ {e f} → (c : chain (ln e) (ln f)) → Even (len c)
+  pl-len-odd : ∀ {e f} → (c : chain (pt e) (ln f)) → Odd (len c)
+  ll-len-even {.f} {f} [ .(ln f) ] = evenZero
+  ll-len-even {e} (_∷_ {pt x} .(ln e) {{e<>f}} {{e#f}} c) = oddEven (pl-len-odd c)
+  ll-len-even {e} (_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-ln#eq e x e#f e<>f)
+  pl-len-odd {e} (_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-pt#eq e x e#f e<>f)
+  pl-len-odd {e} (_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} c) = evenOdd (ll-len-even c)
+-}
   data _≈_ {e f} {prop : chain e f → Set} (c : Σ (chain e f) prop) : ( Σ (chain e f) prop) → Set where
     refl : ∀ {p} → _≈_ c (proj₁ c , p)
    
