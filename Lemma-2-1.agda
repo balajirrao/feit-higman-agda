@@ -9,12 +9,12 @@ open import Data.Unit using (⊤; tt)
 open import Data.Empty
 open import Data.Product
 
-open import Relation.Binary.PropositionalEquality as PropEq
-open PropEq.≡-Reasoning renaming (begin_ to ≡begin_; _≡⟨_⟩_ to _==⟨_⟩_; _∎ to _≡∎)
+open import Relation.Binary.PropositionalEquality
+open ≡-Reasoning renaming (begin_ to ≡begin_; _≡⟨_⟩_ to _==⟨_⟩_; _∎ to _≡∎)
 
 open import Relation.Nullary.Core
 
-open import Function.Equality hiding (setoid)
+open import Function.Equality hiding (setoid; cong)
 open import Function.Bijection
 
 open import Misc
@@ -35,138 +35,172 @@ module Lemma-2-1 where
                                   (even≡ (sym p) (ll-len-even lc))
                                   (pl-len-odd pc)
     
-  -- An incident point-line pair can *not* have equal len-lambda distance to a common point
+  -- An incident point-line pair can *not* have equal shortest distances to a common point
+  -- because of even-odd polarity
   step1 : ∀ {e e₁ f} → .((pt e) # (ln e₁)) → (lambda (pt e) f) ≡ (lambda (ln e₁) f) → ⊥
   step1 {e} {e₁} {f} p q rewrite (lcc-id (sc (ln e₁) f))
-                 = step0 (spc e f) (slc e₁ f)  (trans spc-len-lambda (trans q (sym slc-len-lambda)))
+                 = step0 (spc e f) (slc e₁ f)  (trans spc-len-lambda
+                                                      (trans q (sym slc-len-lambda)))
+  
+  lambda-unequal : ∀ {e e₁ f} → .{e#e₁ : e # e₁} .{e<>e₁ : e ≢ e₁} → (lambda e f) ≡ (lambda e₁ f) → ⊥
+  lambda-unequal {pt x} {pt x₁} {f} {e₁#e} {e₁<>e} _ = A-pt#eq e₁#e e₁<>e 
+  lambda-unequal {ln x} {ln x₁} {f} {e₁#e} {e₁<>e} _ = A-ln#eq e₁#e e₁<>e
+  lambda-unequal {pt x} {ln x₁} {f} {e₁#e} {e₁<>e} λ≡ = step1 e₁#e λ≡
+  lambda-unequal {ln x} {pt x₁} {f} {e₁#e} {e₁<>e} λ≡ = step1 (#sym e₁#e) (sym λ≡)
 
-  -- If e # e₁ then λ (e₁ , f) is atmost suc ( λ ( e, f))
-  step2 : ∀ {e e₁ f} → (pt e) # (ln e₁) → (lambda (ln e₁) f) ≯ suc (lambda (pt e) f)
-  step2 {e} {e₁} {f} e#e₁ p = lambda-shortest (pt e ∷ sc (ln e₁) f)
-                              (⊥-elim (lambda-shortest
-                                (_∷_ (ln e₁) {{e#f = #sym e#e₁}} (sc (pt e) f))
-                              (begin
-                              suc (suc (len (sc (pt e) f)))
-                                ≡⟨ PropEq.cong suc (PropEq.cong suc sc-len-lambda) ⟩
-                              suc (suc (lambda (pt e) f))
-                                ≤⟨ p ⟩
-                              (lambda (ln e₁) f) ∎
-                              )))
-                                
-  -- If e # e₁ then λ (e₁ , f) is least pred ( λ ( e, f))
-  step3 : ∀ {e e₁ f} → .((pt e) # (ln e₁)) → (lambda (pt e) f ≡ n) → (lambda (ln e₁) f) ≮ pred (lambda (pt e) f)
-  step3 {e} {e₁} {f} e#e₁ ≡n p = lambda-shortest (_∷_ (ln e₁) {{e#f = #sym e#e₁}} (sc (pt e) f))
-                                 (⊥-elim (lambda-shortest (pt e ∷ sc (ln e₁) f)
-                                         (begin
-                                           suc (suc (len (sc (ln e₁) f)))
-                                               ≡⟨ PropEq.cong suc (PropEq.cong suc sc-len-lambda) ⟩
-                                                 suc (suc (lambda (ln e₁) f))
-                                                   ≤⟨ s≤s p ⟩
-                                                 suc (pred (lambda (pt e) f))
-                                                   ≡⟨ suc∘pred≡id
-                                                      (begin
-                                                        1
-                                                          ≤⟨ s≤s z≤n ⟩
-                                                        3
-                                                          ≤⟨ n>2 ⟩
-                                                        n
-                                                          ≡⟨ sym ≡n ⟩
-                                                        lambda (pt e) f ∎)
-                                                      ⟩
-                                                 lambda (pt e) f
-                                                 ∎
-                                               )))
-    
+  -- Given 3 contiguous natural numbers a b c and that if
+  -- ∙ x is not greater than c
+  -- ∙ x is not less than a
+  -- ∙ x is not equal to b
+  -- ∙ x is not equal to c
+  -- ⇒ Then conclude x is equal to a
+  x≡pred : ∀ {b} (x : ℕ) (b≥1 : b ≥ 1) (x≮a : x ≮ (pred b)) (x≯c : x ≯ (suc b))
+                              (x≢b : x ≢ b) (x≢c : x ≢ (suc b)) → x ≡ pred b
+  x≡pred {zero} x () x≮a x≯c x≢b x≢c
+  x≡pred {suc zero} x (s≤s z≤n) x≮a x≯c x≢b x≢c with compare x 0
+  x≡pred {suc zero} .0 (s≤s z≤n) x≮a x≯c x≢b x≢c | equal .0 = refl
+  x≡pred {suc zero} .1 (s≤s z≤n) x≮a x≯c x≢b x≢c | greater .0 zero = ⊥-elim (x≢b refl)
+  x≡pred {suc zero} .2 (s≤s z≤n) x≮a x≯c x≢b x≢c | greater .0 (suc zero) = ⊥-elim (x≢c refl)
+  x≡pred {suc zero} .(suc (suc (suc k))) (s≤s z≤n) x≮a x≯c x≢b x≢c | greater .0 (suc (suc k)) = ⊥-elim (x≯c (s≤s (s≤s (s≤s z≤n))))
+  x≡pred {suc (suc b)} zero (s≤s z≤n) x≮a x≯c x≢b x≢c = ⊥-elim (x≮a (s≤s z≤n))
+  x≡pred {suc (suc b)} (suc x) b≥1 x≮a x≯c x≢b x≢c = cong suc (x≡pred {suc b} x (s≤s z≤n)
+                                                              (λ z → x≮a (s≤s z))
+                                                              (λ z → x≯c (s≤s z))
+                                                              (λ z → x≢b (cong suc z))
+                                                              (λ z → x≢c (cong suc z))) 
 
-  -- Therefore we conclude by A₁ that λ (e₁, f) must be equal to pred ( λ (e , f))
-  step4 : ∀ {e e₁ f} → .((pt e) # (ln e₁)) → (lambda (pt e) f) ≡ n →  (lambda (ln e₁) f) ≡ pred (lambda (pt e) f)
-  step4 {e} {e₁} {f} e#e₁ ≡n with (suc(lambda (ln e₁) f)) ≤? pred (lambda (pt e) f)
-  step4 e#e₁ ≡n | yes p = ⊥-elim (step3 e#e₁ ≡n p)
-  step4 {e} {e₁} {f} e#e₁ ≡n | no ¬p with suc (lambda (pt e) f) ≤? (lambda (ln e₁) f)
-  step4 {e} {e₁} {f} e#e₁ ≡n | no ¬p | yes p = ⊥-elim (A₁'
-                                               (begin
-                                                 suc (reveal _n) 
-                                                   ≡⟨ PropEq.cong suc (sym ≡n) ⟩
-                                                 suc (lambda (pt e) f)
-                                                   ≤⟨ p ⟩
-                                                 (lambda (ln e₁) f ∎)))
+  n≥1 : n ≥ 1
+  n≥1 = begin 1 ≤⟨ s≤s z≤n ⟩ 3 ≤⟨ n>2 ⟩ (n ∎)
 
-  step4 {e} {e₁} {f} e#e₁ ≡n | no ¬p₁ | no ¬p with (lambda (pt e) f) ≟ (lambda (ln e₁) f)
-  step4 e#e₁ ≡n | no ¬p₁ | no ¬p | yes p = ⊥-elim (step1 e#e₁ p)
-  step4 e#e₁ ≡n | no ¬p₂ | no ¬p₁ | no ¬p = ≤-≥⇒≡ (
-                                                  pred-mono(pred-mono(
-                                                  (≤≢⇒< (≰⇒> ¬p₁))
-                                                  (λ t₁ → ¬p (PropEq.cong pred (sym t₁)))
-                                                  ))) (suc-≤ (≰⇒> ¬p₂))
+  n≢0 : n ≡ 0 → ⊥
+  n≢0 n≡0 = ⊥-elim (n≰2 (<-≡-trans (cong suc (cong suc (sym n≡0))) (≤-steps 2 m≤m)))
+  
+
+  lambda-pred : ∀ {e e₁ f} .{e#e₁ : e # e₁} .{e<>e₁ : e ≢ e₁} → lambda e f ≡ n → lambda e₁ f ≡ pred (lambda e f)
+  lambda-pred {e} {e₁} {f} {e#e₁} {e<>e₁} p = x≡pred {lambda e f} (lambda e₁ f)
+                                          (<-≡-trans p n≥1)
+                                          (λ x → lambda-ub {e<>e₁ = λ z → e<>e₁ (sym z)} {e#e₁ = #sym e#e₁}
+                                                 (begin
+                                                   suc (suc (lambda e₁ f))
+                                                     ≤⟨ s≤s x ⟩
+                                                   suc (pred (lambda e f))
+                                                     ≡⟨ suc∘pred≡id (<-≡-trans p n≥1) ⟩
+                                                   (lambda e f ∎)))
+                                          (λ x → lambda-lb {e<>e₁ = λ z → e<>e₁ (sym z)} {e#e₁ = #sym e#e₁}
+                                                 (begin
+                                                   1
+                                                     ≤⟨ <-≡-trans p n≥1 ⟩
+                                                   lambda e f
+                                                     ≤⟨ ≤-steps 2 m≤m ⟩
+                                                   suc (suc (lambda e f))
+                                                     ≤⟨ x ⟩ lambda e₁ f ∎) (pred-mono x))
+                                          (lambda-unequal {e#e₁ = #sym e#e₁} {e<>e₁ = λ z → e<>e₁ (sym z)})
+                                          (λ x → A₁'
+                                                 (begin
+                                                   suc (reveal _n)
+                                                     ≡⟨ cong suc (sym p) ⟩
+                                                   suc (lambda e f)
+                                                     ≡⟨ sym x ⟩
+                                                   lambda e₁ f ∎))
  
-  -- Fun from chains of length n from e to f to lines incident with e  
-  step5 : ∀ {e f} → Σ (p-chain e f) (λ pc → p-len pc ≡ n)  → L# e
-  step5 (c , p) with n | n>2
-  step5 (c , p) | zero | ()
-  step5 {e} ([ .e ] , ()) | suc a | s≤s b
-  step5 {e} (_∷_ {l} .e {{e#f}} c , p) | suc a | s≤s b = l ⟦ e#f ⟧
+  
+ -- F and F-inverse build correspondence between chains of length n and lines incident with e
+  F : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → Σ (chain (pt e) f) (λ c → len c ≡ n) → L# e
+  F {λ≡n = λ≡n} ([ ._ ] , len≡n) = ⊥-elim (n≢0 (sym len≡n))
+  F (_∷_ {pt x} ._ {{e<>f}} {{e#f}} c , len≡n) = ⊥-elim (A-pt#eq e#f e<>f)
+  F (_∷_ {ln f} ._ {{e<>f}} {{e#f}} c , len≡n) = f ⟦ e#f ⟧ 
 
-  step5-inj : ∀ {e f} (c c' : Σ (p-chain e f) (λ pc → p-len pc ≡ n)) →
-                step5 c ≡ step5 c' → pc-to-c (proj₁ c) ≡ pc-to-c (proj₁ c')
-  step5-inj {e} {f} c c' p with n | n>2 | inspect reveal _n
-  step5-inj {e} ([ .e ] , l) ([ .e ] , n) p | a | b | [ eq ] = refl
-  step5-inj {e} ([ .e ] , refl) (_∷_ .e {{e#f}} c , ()) p | .0 | b | [ eq ]
-  step5-inj {e} (_∷_ .e {{e#f}} c , ()) ([ .e ] , refl) p | .0 | b  | [ eq ]
-  step5-inj {e} (_∷_ .e {{e#f}} c , l) (_∷_ .e {{e#f₁}} c₁ , refl) refl | ._ | s≤s b | [ eq ] =
-                PropEq.cong (_∷_ (pt e)) (A₂ ((lc-to-c c) ,
-                                             (begin
-                                               suc (len (lc-to-c c))
-                                                 ≡⟨ PropEq.cong suc (sym (llen-len c)) ⟩ 
-                                               suc (l-len c)
-                                                 ≡⟨ l ⟩
-                                               suc (l-len c₁)
-                                                 ≡⟨ sym eq ⟩
-                                               n
-                                                 ∎))
-                                             ((lc-to-c c₁),
-                                               (begin
-                                                 suc (len (lc-to-c c₁))
-                                                   ≡⟨ PropEq.cong suc (sym (llen-len c₁)) ⟩
-                                                 suc (l-len c₁)
-                                                   ≡⟨ sym eq ⟩
-                                                 (n ∎))
-                                             ))
+  F-cong : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → {c c' : Σ (chain (pt e) f) (λ c → len c ≡ n)}
+                                                 → c ≈ c' → F {e} {f} {λ≡n} c ≡ F {e} {f} {λ≡n} c'
+  F-cong {e} {.(pt e)} {λ≡n} {.([ pt e ]) , proj₂} {[ .(pt e) ] , proj₄} refl = refl
+  F-cong {e} {f} {λ≡n} {.(pt e ∷ proj₃) , proj₂} {_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
+  F-cong {e} {f} {λ≡n} {.(pt e ∷ proj₃) , proj₂} {_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
 
-  -- Since lambda e₁ f = n - 1, 
- -- step6 : 
+  F-inverse : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → L# e → Σ (chain (pt e) f) (λ c → len c ≡ n)
+  F-inverse {e} {f} {λ≡n} (e₁ ⟦ p#l ⟧) = (pt e) ∷ sc (ln e₁) f , 
+                                          (≡begin
+                                            suc (len (sc (ln e₁) f))
+                                              ==⟨ cong suc sc-len-lambda ⟩
+                                            suc (lambda (ln e₁) f)
+                                              ==⟨ cong suc (lambda-pred {e#e₁ = p#l} {e<>e₁ = pl-neq} λ≡n) ⟩
+                                            suc (pred (lambda (pt e) f))
+                                              ==⟨ suc∘pred≡id (<-≡-trans λ≡n n≥1) ⟩
+                                            lambda (pt e) f
+                                              ==⟨ λ≡n ⟩
+                                            n ≡∎)
+  
+  F-inverse-cong : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → {i j : L# e} → i ≡ j → F-inverse {e} {f} {λ≡n} i ≈ F-inverse {e} {f} {λ≡n} j
+  F-inverse-cong {_} {_} {_} {.j} {j} refl = refl
 
-  -- Forall f, given e # l, get a p-chain from e to f
-  step6 : ∀ {e f} → L# e → (lambda (pt e) f ≡ n) →  Σ (p-chain e f) (λ pc → p-len pc ≡ n)
-  step6 {e} {f} l#e p = (_∷_ e {{e#f = p#l l#e}} (slc (#l l#e) f) ,
-                                                (≡begin
-                                                   suc (l-len (c-to-lc (sc (ln (#l l#e)) f)))
-                                                     ==⟨ PropEq.cong suc (llen-len (slc (#l l#e) f)) ⟩
-                                                   suc (len (lc-to-c (c-to-lc (sc (ln (#l l#e)) f))))
-                                                     ==⟨ PropEq.cong suc (PropEq.cong len (lcc-id (sc (ln (#l l#e)) f))) ⟩
-                                                   suc (len (sc (ln (#l l#e)) f))
-                                                     ==⟨ PropEq.cong suc sc-len-lambda ⟩
-                                                   suc (lambda (ln (#l l#e)) f)
-                                                     ==⟨ PropEq.cong suc (step4 (p#l l#e) p) ⟩ 
-                                                   suc (pred (lambda (pt e) f))
-                                                     ==⟨ suc∘pred≡id
-                                                         (begin
-                                                           1
-                                                         ≤⟨ s≤s z≤n ⟩
-                                                           3
-                                                         ≤⟨ n>2 ⟩
-                                                           n
-                                                         ≡⟨ sym p ⟩ (lambda (pt e) f ∎)) ⟩
-                                                     lambda (pt e) f ==⟨ p ⟩ n ≡∎))
+  -- Proof that F is injective
+  F-inj : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → {c c' : Σ (chain (pt e) f) (λ c → len c ≡ n)} →
+                      F {e} {f} {λ≡n} c ≡ F  {e} {f} {λ≡n} c' → c ≈ c'
+  F-inj {e} {.(pt e)} {_} {([ .(pt e) ] , len≡n)} {([ .(pt e) ] , len≡n')} refl = ⊥-elim (n≢0 (sym len≡n'))
+  F-inj {e} {.(pt e)} {_} {([ .(pt e) ] , len≡n)} {(_∷_ .(pt e) {{e<>f}} {{e#f}} c' , len≡n')} p = ⊥-elim (n≢0 (sym len≡n))
+  F-inj {e} {.(pt e)} {_} {(_∷_ .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {([ .(pt e) ] , len≡n')} p = ⊥-elim (n≢0 (sym len≡n'))
+  F-inj {e} {f} {_} {(_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {(_∷_ .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n')} p = ⊥-elim (A-pt#eq e#f e<>f)
+  F-inj {e} {f} {_} {(_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {(_∷_ {pt x₁} .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n')} p = ⊥-elim (A-pt#eq e#f₁ e<>f₁)
+  F-inj {e} {f} {_} {(_∷_ {ln .x₁} .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {(_∷_ {ln x₁} .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n')} refl = --{!!}
+                     chains≡⇒≈ (cong (λ x → _∷_ (pt e) {{e<>f = e<>f}} {{e#f = e#f}} x)
+                          (A₂ (c , (≡⇒≤ len≡n)) (c' , (≡⇒≤ len≡n'))))
+ 
 
-  step7 : ∀ {e f} → L# e → (lambda (pt e) f ≡ n) → Σ (chain (pt e) f) (λ c → len c ≡ n)
-  step7 {e} {f} l#e p = pc-to-c (proj₁ (step6 l#e p)) , trans (PropEq.cong suc (sym (llen-len (slc (#l l#e) f)))) (proj₂ (step6 l#e p))
+  lemma2-1 : ∀ {e f} → lambda (pt e) f ≡ n → Bijection (ChainsWithProperty (pt e) f (λ c → len c ≡ n)) (setoid (L# e))
+  lemma2-1 {e} {f} λ≡n = record { to = record { _⟨$⟩_ = F {e} {f} {λ≡n}; cong = F-cong };
+                                  bijective = record { injective = F-inj;
+                                                       surjective = record { from = record
+                                                                           { _⟨$⟩_ = F-inverse {e} {f} {λ≡n};
+                                                                             cong = F-inverse-cong {e} {f} {λ≡n} };
+                                                                           right-inverse-of = λ x → refl } } }
 
+   
+ -- F and F-inverse build correspondence between chains of length n and lines incident with e
+  G : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → Σ (chain (ln e) f) (λ c → len c ≡ n) → P# e
+  G {λ≡n = λ≡n} ([ ._ ] , len≡n) = ⊥-elim (n≢0 (sym len≡n))
+  G (_∷_ {ln x} ._ {{e<>f}} {{e#f}} c , len≡n) = ⊥-elim (A-ln#eq e#f e<>f)
+  G (_∷_ {pt f} ._ {{e<>f}} {{e#f}} c , len≡n) = f ⟦ e#f ⟧
 
-  lemma2-1 : ∀ {e f} (p : (lambda (pt e) f) ≡ n) → Bijection (ChainsWithProperty (pt e) f (λ c → len c ≡ n)) (setoid (L# e))
-  lemma2-1 {e} {f} p = record { to = record { _⟨$⟩_ = λ z → step5 (c-to-pc (proj₁ z) , {!!}); cong = {!!} };
-                                              bijective = record { injective = {!!};
-                                                                   surjective = record
-                                                                                { from = record { _⟨$⟩_ = λ t₁ → step7 t₁ p; cong = {!!} };
-                                                                                right-inverse-of = λ x → {!!} } } }
+  G-cong : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → {c c' : Σ (chain (ln e) f) (λ c → len c ≡ n)}
+                                                 → c ≈ c' → G {e} {f} {λ≡n} c ≡ G {e} {f} {λ≡n} c'
+  G-cong {e} {.(ln e)} {λ≡n} {.([ ln e ]) , proj₂} {[ .(ln e) ] , proj₄} refl = refl
+  G-cong {e} {f} {λ≡n} {.(ln e ∷ proj₃) , proj₂} {_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
+  G-cong {e} {f} {λ≡n} {.(ln e ∷ proj₃) , proj₂} {_∷_ {pt x} .(ln e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
 
+  G-inverse : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → P# e → Σ (chain (ln e) f) (λ c → len c ≡ n)
+  G-inverse {e} {f} {λ≡n} (e₁ ⟦ p#l ⟧) = (ln e) ∷ sc (pt e₁) f , 
+                                          (≡begin
+                                            suc (len (sc (pt e₁) f))
+                                              ==⟨ cong suc sc-len-lambda ⟩
+                                            suc (lambda (pt e₁) f)
+                                              ==⟨ cong suc (lambda-pred {e#e₁ = p#l} {e<>e₁ = lp-neq} λ≡n) ⟩
+                                            suc (pred (lambda (ln e) f))
+                                              ==⟨ suc∘pred≡id (<-≡-trans λ≡n n≥1) ⟩
+                                            lambda (ln e) f
+                                              ==⟨ λ≡n ⟩
+                                            n ≡∎)
+  
+  G-inverse-cong : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → {i j : P# e} → i ≡ j → G-inverse {e} {f} {λ≡n} i ≈ G-inverse {e} {f} {λ≡n} j
+  G-inverse-cong {_} {_} {_} {.j} {j} refl = refl
 
+  -- Proof that F is injective
+  G-inj : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → {c c' : Σ (chain (ln e) f) (λ c → len c ≡ n)} →
+                      G {e} {f} {λ≡n} c ≡ G {e} {f} {λ≡n} c' → c ≈ c'
+  G-inj {e} {.(ln e)} {λ≡n} {[ .(ln e) ] , proj₂} {[ .(ln e) ] , proj₄} eq = refl
+  G-inj {e} {.(ln e)} {λ≡n} {[ .(ln e) ] , proj₂} {_∷_ {pt x} .(ln e) {{e<>f}} {{e#f}} proj₃ , proj₄} eq = ⊥-elim (n≢0 (sym proj₂))
+  G-inj {e} {.(ln e)} {λ≡n} {[ .(ln e) ] , proj₂} {_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₃ , proj₄} eq = ⊥-elim (A-ln#eq e#f e<>f)
+  G-inj {e} {.(ln e)} {λ≡n} {_∷_ .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂} {[ .(ln e) ] , proj₄} eq = ⊥-elim (n≢0 (sym proj₄))
+  G-inj {e} {f} {λ≡n} {_∷_ {pt .x₁} .(ln e) {{e<>f}} {{e#f}} c , len≡n} {_∷_ {pt x₁} .(ln e) {{e<>f₁}} {{e#f₁}} c' , len≡n'} refl = 
+                                                                                                                   chains≡⇒≈
+                                                                                                                     (cong (λ x → _∷_ (ln e) {{e<>f = e<>f}} {{e#f = e#f}} x)
+                                                                                                                                      (A₂ (c , ≡⇒≤ len≡n) (c' , ≡⇒≤ len≡n')))
+  G-inj {e} {f} {λ≡n} {_∷_ {pt x} .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂} {_∷_ {ln x₁} .(ln e) {{e<>f₁}} {{e#f₁}} proj₃ , proj₄} eq = ⊥-elim (A-ln#eq e#f₁ e<>f₁)
+  G-inj {e} {f} {λ≡n} {_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂} {_∷_ .(ln e) {{e<>f₁}} {{e#f₁}} proj₃ , proj₄} eq = ⊥-elim (A-ln#eq e#f e<>f)
+ 
+
+  lemma2-1a : ∀ {e f} → lambda (ln e) f ≡ n → Bijection (ChainsWithProperty (ln e) f (λ c → len c ≡ n)) (setoid (P# e))
+  lemma2-1a {e} {f} λ≡n = record { to = record { _⟨$⟩_ = G {e} {f} {λ≡n}; cong = G-cong };
+                                  bijective = record { injective = G-inj;
+                                                       surjective = record { from = record
+                                                                           { _⟨$⟩_ = G-inverse {e} {f} {λ≡n};
+                                                                             cong = G-inverse-cong {e} {f} {λ≡n} };
+                                                                           right-inverse-of = λ x → refl } } }
