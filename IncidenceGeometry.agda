@@ -101,6 +101,7 @@ module IncidenceGeometry where
   module ShortestPredicate where
     postulate
       lambda : (e f : O) → ℕ
+      lambda-sym : ∀ {e f} → (lambda e f) ≡ (lambda f e)
       sc : (e f : O) → (chain e f)
       sc-len-lambda : ∀ {e f} → (len (sc e f)) ≡ (lambda e f)
       lambda-shortest : ∀ {e f} (c : chain e f) → (lambda e f) ≯ (len c)
