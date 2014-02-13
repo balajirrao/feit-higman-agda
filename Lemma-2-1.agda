@@ -23,6 +23,8 @@ open import GenPolygon
 
 open import Data.Unit.Core
 
+import Level
+
 module Lemma-2-1 where
 
   -- A p-chain and an l-chain ending at the common point can *not* have equal lengths
@@ -110,19 +112,21 @@ module Lemma-2-1 where
   F (_∷_ {pt x} ._ {{e<>f}} {{e#f}} c , len≡n) = ⊥-elim (A-pt#eq e#f e<>f)
   F (_∷_ {ln f} ._ {{e<>f}} {{e#f}} c , len≡n) = f ⟦ e#f ⟧ 
 
+
   F-cong : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → {c c' : Σ (chain (pt e) f) (λ c → len c ≡ n)}
                                                  → c ≈ c' → F {e} {f} {λ≡n} c ≡ F {e} {f} {λ≡n} c'
   F-cong {e} {.(pt e)} {λ≡n} {.([ pt e ]) , proj₂} {[ .(pt e) ] , proj₄} refl = refl
   F-cong {e} {f} {λ≡n} {.(pt e ∷ proj₃) , proj₂} {_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
   F-cong {e} {f} {λ≡n} {.(pt e ∷ proj₃) , proj₂} {_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
 
+
   F-inverse : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → L# e → Σ (chain (pt e) f) (λ c → len c ≡ n)
-  F-inverse {e} {f} {λ≡n} (e₁ ⟦ p#l ⟧) = (pt e) ∷ sc (ln e₁) f , 
+  F-inverse {e} {f} {λ≡n} (e₁ ⟦ p#l ⟧) = _∷_ (pt e) {{λ ()}} (sc (ln e₁) f) , 
                                           (≡begin
                                             suc (len (sc (ln e₁) f))
                                               ==⟨ cong suc sc-len-lambda ⟩
                                             suc (lambda (ln e₁) f)
-                                              ==⟨ cong suc (lambda-pred {e#e₁ = p#l} {e<>e₁ = pl-neq} λ≡n) ⟩
+                                              ==⟨ cong suc (lambda-pred {e#e₁ = p#l} {e<>e₁ = λ()} λ≡n) ⟩
                                             suc (pred (lambda (pt e) f))
                                               ==⟨ suc∘pred≡id (<-≡-trans λ≡n n≥1) ⟩
                                             lambda (pt e) f
@@ -160,19 +164,22 @@ module Lemma-2-1 where
   G (_∷_ {ln x} ._ {{e<>f}} {{e#f}} c , len≡n) = ⊥-elim (A-ln#eq e#f e<>f)
   G (_∷_ {pt f} ._ {{e<>f}} {{e#f}} c , len≡n) = f ⟦ e#f ⟧
 
+
   G-cong : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → {c c' : Σ (chain (ln e) f) (λ c → len c ≡ n)}
                                                  → c ≈ c' → G {e} {f} {λ≡n} c ≡ G {e} {f} {λ≡n} c'
-  G-cong {e} {.(ln e)} {λ≡n} {.([ ln e ]) , proj₂} {[ .(ln e) ] , proj₄} refl = refl
-  G-cong {e} {f} {λ≡n} {.(ln e ∷ proj₃) , proj₂} {_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
-  G-cong {e} {f} {λ≡n} {.(ln e ∷ proj₃) , proj₂} {_∷_ {pt x} .(ln e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl
+  G-cong {e} {.(ln e)} {λ≡n} {.([ ln e ]) , proj₂} {[ .(ln e) ] , proj₄} refl = ⊥-elim (n≢0 (sym proj₄))
+  G-cong {e} {f} {λ≡n} {.(ln e ∷ proj₃) , proj₂} {_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = ⊥-elim (A-ln#eq e#f e<>f)
+  G-cong {e} {f} {λ≡n} {.(ln e ∷ proj₃) , proj₂} {_∷_ {pt x} .(ln e) {{e<>f}} {{e#f}} proj₃ , proj₄} refl = refl 
+
+
 
   G-inverse : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → P# e → Σ (chain (ln e) f) (λ c → len c ≡ n)
-  G-inverse {e} {f} {λ≡n} (e₁ ⟦ p#l ⟧) = (ln e) ∷ sc (pt e₁) f , 
+  G-inverse {e} {f} {λ≡n} (e₁ ⟦ p#l ⟧) = _∷_ (ln e) {{λ ()}} (sc (pt e₁) f) , 
                                           (≡begin
                                             suc (len (sc (pt e₁) f))
                                               ==⟨ cong suc sc-len-lambda ⟩
                                             suc (lambda (pt e₁) f)
-                                              ==⟨ cong suc (lambda-pred {e#e₁ = p#l} {e<>e₁ = lp-neq} λ≡n) ⟩
+                                              ==⟨ cong suc (lambda-pred {e#e₁ = p#l} {e<>e₁ = λ ()} λ≡n) ⟩
                                             suc (pred (lambda (ln e) f))
                                               ==⟨ suc∘pred≡id (<-≡-trans λ≡n n≥1) ⟩
                                             lambda (ln e) f
@@ -181,6 +188,7 @@ module Lemma-2-1 where
   
   G-inverse-cong : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → {i j : P# e} → i ≡ j → G-inverse {e} {f} {λ≡n} i ≈ G-inverse {e} {f} {λ≡n} j
   G-inverse-cong {_} {_} {_} {.j} {j} refl = refl
+
 
   -- Proof that F is injective
   G-inj : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → {c c' : Σ (chain (ln e) f) (λ c → len c ≡ n)} →
@@ -193,6 +201,7 @@ module Lemma-2-1 where
                                                                                                                    chains≡⇒≈
                                                                                                                      (cong (λ x → _∷_ (ln e) {{e<>f = e<>f}} {{e#f = e#f}} x)
                                                                                                                                       (A₂ (c , ≡⇒≤ len≡n) (c' , ≡⇒≤ len≡n')))
+
   G-inj {e} {f} {λ≡n} {_∷_ {pt x} .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂} {_∷_ {ln x₁} .(ln e) {{e<>f₁}} {{e#f₁}} proj₃ , proj₄} eq = ⊥-elim (A-ln#eq e#f₁ e<>f₁)
   G-inj {e} {f} {λ≡n} {_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂} {_∷_ .(ln e) {{e<>f₁}} {{e#f₁}} proj₃ , proj₄} eq = ⊥-elim (A-ln#eq e#f e<>f)
  
@@ -203,4 +212,8 @@ module Lemma-2-1 where
                                                        surjective = record { from = record
                                                                            { _⟨$⟩_ = G-inverse {e} {f} {λ≡n};
                                                                              cong = G-inverse-cong {e} {f} {λ≡n} };
-                                                                           right-inverse-of = λ x → refl } } }
+                                                                           right-inverse-of = λ x → refl } } } 
+
+
+
+
