@@ -95,7 +95,15 @@ module IncidenceGeometry where
   len-rev : ∀ {e f} {c : chain e f} → len c ≡ len (rev c)
   len-rev {.f} {f} {[ .f ]} = refl
   len-rev {e} {f} {_∷_ .e {{e<>f}} {{e#f}} c} = trans (cong suc len-rev) (len-++ (rev c) e {{λ x → e<>f (sym x)}} {{#sym e#f}})
+  
+  rev-++ : ∀ {e f g} {c : chain e f} .{f#g : f # g} .{f<>g : f ≢ g} → rev (c ++ g) ≡ _∷_ g {{e<>f = λ x → f<>g (sym x)}} {{e#f = #sym f#g}} (rev c) 
+  rev-++ {.f} {f} {g} {[ .f ]} = refl
+  rev-++ {e} {f} {g} {_∷_ {e₁} .e {{e<>e₁}} {{e#e₁}} c} {f#g} {f<>g} rewrite rev-++ {e₁} {f} {g} {c} {f#g} {f<>g} = refl                                                   
 
+  rev²-id : ∀ {e f} {c : chain e f} → rev (rev c) ≡ c
+  rev²-id {.f} {f} {[ .f ]} = refl
+  rev²-id {e} {f} {_∷_ {e₁} .e {{e<>f}} {{e#f}} c} = trans (rev-++ {f} {e₁} {e} {rev c} {#sym e#f} {λ z → e<>f (sym z)}) (cong (_∷_ e) rev²-id)
+ 
   -- Shortest chain --
 
   module ShortestPredicate where
