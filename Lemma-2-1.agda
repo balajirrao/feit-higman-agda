@@ -163,7 +163,7 @@ module Lemma-2-1 where
                                               _⟨$⟩_ = F-inverse {e} {f} {λ≡n};
                                               cong = F-inverse-cong {e} {f} {λ≡n} };
                                               inverse-of = record { left-inverse-of = λ x → chains≡⇒≈ (F-left-inv λ≡n x); right-inverse-of = λ x → refl } }
-{-
+
   {-lemma2-1 {e} {f} λ≡n = record { to = record { _⟨$⟩_ = F {e} {f} {λ≡n}; cong = F-cong };
                                   bijective = record { injective = F-inj;
                                                        surjective = record { from = record
@@ -220,14 +220,21 @@ module Lemma-2-1 where
   G-inj {e} {f} {λ≡n} {_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂} {_∷_ .(ln e) {{e<>f₁}} {{e#f₁}} proj₃ , proj₄} eq = ⊥-elim (A-ln#eq e#f e<>f)
  
 
+
+ 
+  G-left-inv : ∀ {e f} → (λ≡n : lambda (ln e) f ≡ n) (x : Σ (chain (ln e) f) (λ c → len c ≡ n)) → proj₁ (G-inverse {e} {f} {λ≡n} (G {e} {f} {λ≡n} x)) ≡ proj₁ (x)
+  G-left-inv {e} p ([ .(ln e) ] , proj₂) = ⊥-elim (n≢0 (sym proj₂))
+  G-left-inv {e} p (_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂) = ⊥-elim (A-ln#eq e#f e<>f)
+  G-left-inv {e} {f} p (_∷_ {pt e₁} .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂) = cong (_∷_ (ln e))
+             (A₂ ((sc (pt e₁) f) , (begin suc (len (sc (pt e₁) f)) ≡⟨ cong suc sc-len-lambda ⟩
+                                            suc (lambda (pt e₁) f) ≡⟨ cong suc (lambda-pred {(ln e)} {(pt e₁)} {f} {e#f} {e<>f} p) ⟩
+                                            suc (pred (lambda (ln e) f)) ≡⟨ suc∘pred≡id (<-≡-trans p n≥1) ⟩ lambda (ln e) f ≡⟨ p ⟩ (n ∎)))
+             (proj₁ , ≡⇒≤ proj₂)) 
+
+
   lemma2-1a : ∀ {e f} → lambda (ln e) f ≡ n → Inverse (ChainsWithProperty (ln e) f (λ c → len c ≡ n)) (setoid (P# e))
-  lemma2-1a {e} {f} λ≡n = {!!} {-record { to = record { _⟨$⟩_ = G {e} {f} {λ≡n}; cong = G-cong };
-                                  bijective = record { injective = G-inj;
-                                                       surjective = record { from = record
-                                                                           { _⟨$⟩_ = G-inverse {e} {f} {λ≡n};
-                                                                             cong = G-inverse-cong {e} {f} {λ≡n} };
-                                                                           right-inverse-of = λ x → refl } } } -}
-
--}
-
+  lemma2-1a {e} {f} λ≡n = record { to = record { _⟨$⟩_ = G {e} {f} {λ≡n}; cong = G-cong }; from = record {
+                                              _⟨$⟩_ = G-inverse {e} {f} {λ≡n};
+                                              cong = G-inverse-cong {e} {f} {λ≡n} };
+                                              inverse-of = record { left-inverse-of = λ x → chains≡⇒≈ (G-left-inv λ≡n x); right-inverse-of = λ x → refl } }
 
