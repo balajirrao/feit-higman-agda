@@ -114,6 +114,10 @@ module IncidenceGeometry where
       sc-len-lambda : ∀ {e f} → (len (sc e f)) ≡ (lambda e f)
       lambda-shortest : ∀ {e f} (c : chain e f) → (lambda e f) ≯ (len c)
     
+    lambda-zero : ∀ {e} → lambda e e ≡ zero
+    lambda-zero {e} with lambda e e | pred-mono (≰⇒> (lambda-shortest  [ e ] ))
+    lambda-zero | .0 | z≤n = refl
+
     shortest : ∀ {e f} → (c : chain e f) → Set
     shortest {e} {f} c = (len c) ≡ lambda e f
 
