@@ -206,3 +206,10 @@ module GenPolygon where
   -- There exists a f with lambda e f ≡ n
   postulate
     GP : (e : O) → Σ O (λ f → lambda e f ≡ n)
+
+  pp-lambda-even : ∀ {e f} → Even ( lambda (pt e) (pt f) )
+  pp-lambda-even {e} {f} = even≡ sc-len-lambda (pp-len-even (sc (pt e) (pt f)))
+
+  rho : (e f : P) → ℕ
+  rho e f = div2 (pp-lambda-even {e} {f})
+
