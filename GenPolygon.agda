@@ -211,5 +211,7 @@ module GenPolygon where
   pp-lambda-even {e} {f} = even≡ sc-len-lambda (pp-len-even (sc (pt e) (pt f)))
 
   rho : (e f : P) → ℕ
-  rho e f = div2 (pp-lambda-even {e} {f})
+  rho e f = ⌊ (lambda (pt e) (pt f)) /2⌋
 
+  rho-zero : ∀ {e} → rho e e ≡ 0
+  rho-zero {e} rewrite (lambda-zero {pt e}) = refl
