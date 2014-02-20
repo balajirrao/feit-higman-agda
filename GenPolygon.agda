@@ -141,8 +141,8 @@ module GenPolygon where
   pl-len-odd : ∀ {e f} → (c : chain (pt e) (ln f)) → Odd (len c)
   ll-len-even {.f} {f} [ .(ln f) ] = evenZero
   ll-len-even {e} (_∷_ {pt x} .(ln e) {{e<>f}} {{e#f}} c) = oddEven (pl-len-odd c)
-  pl-len-odd {e} (_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-pt#eq e x e#f e<>f)
   ll-len-even {e} (_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-ln#eq e#f e<>f)
+  pl-len-odd {e} (_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-pt#eq e#f e<>f)
   pl-len-odd {e} (_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} c) = evenOdd (ll-len-even c)
 
   data _≈_ {e f} {prop : chain e f → Set} (c : Σ (chain e f) prop) : ( Σ (chain e f) prop) → Set where
