@@ -158,7 +158,7 @@ module Lemma-2-1 where
                                             suc (pred (lambda (pt e) f)) ≡⟨ suc∘pred≡id (<-≡-trans p n≥1) ⟩ lambda (pt e) f ≡⟨ p ⟩ (n ∎)))
              (proj₁ , ≡⇒≤ proj₂)) 
 
-  lemma2-1 : ∀ {e f} → lambda (pt e) f ≡ n → Inverse (ChainsWithProperty (pt e) f (λ c → len c ≡ n)) (setoid (L# e))
+  lemma2-1 : ∀ {e f} → lambda (pt e) f ≡ n → Inverse (ChainsWithPropertySetoid (pt e) f (λ c → len c ≡ n)) (setoid (L# e))
   lemma2-1 {e} {f} λ≡n = record { to = record { _⟨$⟩_ = F {e} {f} {λ≡n}; cong = F-cong }; from = record {
                                               _⟨$⟩_ = F-inverse {e} {f} {λ≡n};
                                               cong = F-inverse-cong {e} {f} {λ≡n} };
@@ -232,7 +232,7 @@ module Lemma-2-1 where
              (proj₁ , ≡⇒≤ proj₂)) 
 
 
-  lemma2-1a : ∀ {e f} → lambda (ln e) f ≡ n → Inverse (ChainsWithProperty (ln e) f (λ c → len c ≡ n)) (setoid (P# e))
+  lemma2-1a : ∀ {e f} → lambda (ln e) f ≡ n → Inverse (ChainsWithPropertySetoid (ln e) f (λ c → len c ≡ n)) (setoid (P# e))
   lemma2-1a {e} {f} λ≡n = record { to = record { _⟨$⟩_ = G {e} {f} {λ≡n}; cong = G-cong }; from = record {
                                               _⟨$⟩_ = G-inverse {e} {f} {λ≡n};
                                               cong = G-inverse-cong {e} {f} {λ≡n} };
