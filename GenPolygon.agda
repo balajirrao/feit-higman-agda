@@ -218,3 +218,13 @@ module GenPolygon where
 
   rho-zero : ∀ {e} → rho e e ≡ 0
   rho-zero {e} rewrite (lambda-zero {pt e}) = refl
+
+  -- rho ≡ 0 between two points implies the points are equal
+  rho-zero-eq : ∀ {e f} → rho e f ≡ zero → e ≡ f
+  rho-zero-eq {e} {f} p with (lambda (pt e) (pt f)) | sc (pt e) (pt f) | sc-len-lambda {pt e} {pt f}
+  rho-zero-eq {.f} {f} p | zero | [ .(pt f) ] | b = refl
+  rho-zero-eq {e} p | zero | _∷_ .(pt e) {{e<>f}} {{e#f}} a | ()
+  rho-zero-eq {.f} {f} p | suc zero | [ .(pt f) ] | ()
+  rho-zero-eq {e} {f} refl | suc zero | _∷_ .(pt e) {{e<>f}} {{e#f}} [ .(pt f) ] | b = ⊥-elim (A-pt#eq e#f e<>f)
+  rho-zero-eq {e} refl | suc zero | _∷_ {f₁} .(pt e) {{e<>f}} {{e#f}} (_∷_ .f₁ {{e<>f₁}} {{e#f₁}} a) | ()
+  rho-zero-eq () | suc (suc z) | a | _
