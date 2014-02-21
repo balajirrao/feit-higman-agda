@@ -160,11 +160,11 @@ module GenPolygon where
   ≈-equiv : ∀ {e f} {prop : chain e f → Set} → IsEquivalence (_≈_ {e} {f} {prop}) 
   ≈-equiv {e} {f} {prop} = record { refl = ≈-refl ; sym = ≈-sym; trans = ≈-trans }
 
-  ChainsWithProperty : (e f : O)  (prop : chain e f → Set) → Set
-  ChainsWithProperty e f prop = Σ (chain e f) prop
+  ChainsWithProperty : ∀ {e f} (prop : chain e f → Set) → Set
+  ChainsWithProperty {e} {f} prop = Σ (chain e f) prop
 
-  ChainsWithPropertySetoid : (e f : O) (prop : chain e f → Set) → Setoid _ _
-  ChainsWithPropertySetoid e f prop = record { Carrier = ChainsWithProperty e f prop; _≈_ = _≈_; isEquivalence = ≈-equiv }
+  ChainsWithPropertySetoid : ∀ {e f} (prop : chain e f → Set)  → Setoid _ _
+  ChainsWithPropertySetoid prop = record { Carrier = ChainsWithProperty prop; _≈_ = _≈_; isEquivalence = ≈-equiv }
  
   chains≡⇒≈ : ∀ {e f} {prop : chain e f → Set} {c c' : Σ (chain e f) prop} →
                                                (proj₁ c) ≡ proj₁ c' → c ≈ c'
