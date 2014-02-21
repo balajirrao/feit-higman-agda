@@ -28,21 +28,16 @@ import Level
 module Lemma-2-1 where
 
   -- A p-chain and an l-chain ending at the common point can *not* have equal lengths
-  step0 : ∀ {e e₁ f} → (pc : p-chain e f) (lc : l-chain e₁ f) → (p-len pc) ≡ (l-len lc) → ⊥
-  step0 {e} {e₁} {pt f} pc lc p = eitherEvenOdd
-                                  (p-len pc) (pp-len-even pc)
-                                  (odd≡ (sym p) (lp-len-odd lc))
-  step0 {e} {e₁} {ln f} pc lc p = eitherEvenOdd
-                                  (p-len pc)
-                                  (even≡ (sym p) (ll-len-even lc))
-                                  (pl-len-odd pc)
-    
+  step0 : ∀ {e e₁ f} → (c : chain (pt e) f) → (c' : chain (ln e₁) f) → (len c) ≢ (len c')
+  step0 {e} {e₁} {pt x} c c' p = eitherEvenOdd (len c) (pp-len-even c) (odd≡ (sym p) (lp-len-odd c'))
+  step0 {e} {e₁} {ln x} c c' p = eitherEvenOdd (len c) (even≡ (sym p) (ll-len-even c')) (pl-len-odd c)
+   
   -- An incident point-line pair can *not* have equal shortest distances to a common point
   -- because of even-odd polarity
   step1 : ∀ {e e₁ f} → .((pt e) # (ln e₁)) → (lambda (pt e) f) ≡ (lambda (ln e₁) f) → ⊥
   step1 {e} {e₁} {f} p q rewrite (lcc-id (sc (ln e₁) f))
-                 = step0 (spc e f) (slc e₁ f)  (trans spc-len-lambda
-                                                      (trans q (sym slc-len-lambda)))
+                 = step0 (sc (pt e) f) (sc (ln e₁) f) (trans sc-len-lambda
+                                                      (trans q (sym sc-len-lambda)))
   
   lambda-unequal : ∀ {e e₁ f} → .{e#e₁ : e # e₁} .{e<>e₁ : e ≢ e₁} → (lambda e f) ≡ (lambda e₁ f) → ⊥
   lambda-unequal {pt x} {pt x₁} {f} {e₁#e} {e₁<>e} _ = A-pt#eq e₁#e e₁<>e 
@@ -237,4 +232,5 @@ module Lemma-2-1 where
                                               _⟨$⟩_ = G-inverse {e} {f} {λ≡n};
                                               cong = G-inverse-cong {e} {f} {λ≡n} };
                                               inverse-of = record { left-inverse-of = λ x → chains≡⇒≈ (G-left-inv λ≡n x); right-inverse-of = λ x → refl } }
+
 

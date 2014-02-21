@@ -128,7 +128,7 @@ module GenPolygon where
   slc-len-lambda : ∀ {e f} → l-len (slc e f) ≡ (lambda (ln e) f)
   slc-len-lambda {e} {f} rewrite (lcc-id (sc (ln e) f)) = trans (llen-len (slc e f)) (trans (PropEq.cong len (lcc-id (sc (ln e) f))) sc-len-lambda)
 
-
+  -- TODO : Make c implicit
   pp-len-even : ∀ {e f} → (c : chain (pt e) (pt f)) → Even (len c)
   lp-len-odd : ∀ {e f} → (c : chain (ln e) (pt f)) → Odd (len c)
   pp-len-even {.f} {f} [ .( pt f) ] = evenZero
