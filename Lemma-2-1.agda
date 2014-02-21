@@ -127,10 +127,7 @@ module Lemma-2-1 where
                                             lambda (pt e) f
                                               ==⟨ λ≡n ⟩
                                             n ≡∎)
-  
-  F-inverse-cong : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → {i j : L# e} → i ≡ j → F-inverse {e} {f} {λ≡n} i ≈ F-inverse {e} {f} {λ≡n} j
-  F-inverse-cong {_} {_} {_} {.j} {j} refl = refl
-
+ 
   -- Proof that F is injective
   F-inj : ∀ {e f} {λ≡n : lambda (pt e) f ≡ n} → {c c' : Σ (chain (pt e) f) (λ c → len c ≡ n)} →
                       F {e} {f} {λ≡n} c ≡ F  {e} {f} {λ≡n} c' → c ≈ c'
@@ -140,7 +137,7 @@ module Lemma-2-1 where
   F-inj {e} {f} {_} {(_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {(_∷_ .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n')} p = ⊥-elim (A-pt#eq e#f e<>f)
   F-inj {e} {f} {_} {(_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {(_∷_ {pt x₁} .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n')} p = ⊥-elim (A-pt#eq e#f₁ e<>f₁)
   F-inj {e} {f} {_} {(_∷_ {ln .x₁} .(pt e) {{e<>f}} {{e#f}} c , len≡n)} {(_∷_ {ln x₁} .(pt e) {{e<>f₁}} {{e#f₁}} c' , len≡n')} refl = --{!!}
-                     chains≡⇒≈ (cong (λ x → _∷_ (pt e) {{e<>f = e<>f}} {{e#f = e#f}} x)
+                     (cong (λ x → _∷_ (pt e) {{e<>f = e<>f}} {{e#f = e#f}} x)
                           (A₂ (c , (≡⇒≤ len≡n)) (c' , (≡⇒≤ len≡n'))))
  
 
@@ -153,11 +150,11 @@ module Lemma-2-1 where
                                             suc (pred (lambda (pt e) f)) ≡⟨ suc∘pred≡id (<-≡-trans p n≥1) ⟩ lambda (pt e) f ≡⟨ p ⟩ (n ∎)))
              (proj₁ , ≡⇒≤ proj₂)) 
 
-  lemma2-1 : ∀ {e f} → lambda (pt e) f ≡ n → Inverse (ChainsWithPropertySetoid (pt e) f (λ c → len c ≡ n)) (setoid (L# e))
+  lemma2-1 : ∀ {e f} → lambda (pt e) f ≡ n → Inverse (ChainsWithPropertySetoid {pt e} {f} (λ c → len c ≡ n)) (setoid (L# e))
   lemma2-1 {e} {f} λ≡n = record { to = record { _⟨$⟩_ = F {e} {f} {λ≡n}; cong = F-cong }; from = record {
                                               _⟨$⟩_ = F-inverse {e} {f} {λ≡n};
-                                              cong = F-inverse-cong {e} {f} {λ≡n} };
-                                              inverse-of = record { left-inverse-of = λ x → chains≡⇒≈ (F-left-inv λ≡n x); right-inverse-of = λ x → refl } }
+                                              cong = cong (λ x → proj₁ (F-inverse {e} {f} {λ≡n} x)) };
+                                              inverse-of = record { left-inverse-of = λ x → (F-left-inv λ≡n x); right-inverse-of = λ x → refl } }
 
   {-lemma2-1 {e} {f} λ≡n = record { to = record { _⟨$⟩_ = F {e} {f} {λ≡n}; cong = F-cong };
                                   bijective = record { injective = F-inj;
@@ -194,11 +191,7 @@ module Lemma-2-1 where
                                             lambda (ln e) f
                                               ==⟨ λ≡n ⟩
                                             n ≡∎)
-  
-  G-inverse-cong : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → {i j : P# e} → i ≡ j → G-inverse {e} {f} {λ≡n} i ≈ G-inverse {e} {f} {λ≡n} j
-  G-inverse-cong {_} {_} {_} {.j} {j} refl = refl
-
-
+ 
   -- Proof that F is injective
   G-inj : ∀ {e f} {λ≡n : lambda (ln e) f ≡ n} → {c c' : Σ (chain (ln e) f) (λ c → len c ≡ n)} →
                       G {e} {f} {λ≡n} c ≡ G {e} {f} {λ≡n} c' → c ≈ c'
@@ -207,7 +200,6 @@ module Lemma-2-1 where
   G-inj {e} {.(ln e)} {λ≡n} {[ .(ln e) ] , proj₂} {_∷_ {ln x} .(ln e) {{e<>f}} {{e#f}} proj₃ , proj₄} eq = ⊥-elim (A-ln#eq e#f e<>f)
   G-inj {e} {.(ln e)} {λ≡n} {_∷_ .(ln e) {{e<>f}} {{e#f}} proj₁ , proj₂} {[ .(ln e) ] , proj₄} eq = ⊥-elim (n≢0 (sym proj₄))
   G-inj {e} {f} {λ≡n} {_∷_ {pt .x₁} .(ln e) {{e<>f}} {{e#f}} c , len≡n} {_∷_ {pt x₁} .(ln e) {{e<>f₁}} {{e#f₁}} c' , len≡n'} refl = 
-                                                                                                                   chains≡⇒≈
                                                                                                                      (cong (λ x → _∷_ (ln e) {{e<>f = e<>f}} {{e#f = e#f}} x)
                                                                                                                                       (A₂ (c , ≡⇒≤ len≡n) (c' , ≡⇒≤ len≡n')))
 
@@ -227,10 +219,10 @@ module Lemma-2-1 where
              (proj₁ , ≡⇒≤ proj₂)) 
 
 
-  lemma2-1a : ∀ {e f} → lambda (ln e) f ≡ n → Inverse (ChainsWithPropertySetoid (ln e) f (λ c → len c ≡ n)) (setoid (P# e))
+  lemma2-1a : ∀ {e f} → lambda (ln e) f ≡ n → Inverse (ChainsWithPropertySetoid {ln e} {f} (λ c → len c ≡ n)) (setoid (P# e))
   lemma2-1a {e} {f} λ≡n = record { to = record { _⟨$⟩_ = G {e} {f} {λ≡n}; cong = G-cong }; from = record {
                                               _⟨$⟩_ = G-inverse {e} {f} {λ≡n};
-                                              cong = G-inverse-cong {e} {f} {λ≡n} };
-                                              inverse-of = record { left-inverse-of = λ x → chains≡⇒≈ (G-left-inv λ≡n x); right-inverse-of = λ x → refl } }
+                                              cong = cong (λ x → proj₁ (G-inverse {e} {f} {λ≡n} x)) };
+                                              inverse-of = record { left-inverse-of = λ x → G-left-inv λ≡n x; right-inverse-of = λ x → refl } }
 
 

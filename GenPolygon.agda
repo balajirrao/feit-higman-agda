@@ -145,30 +145,16 @@ module GenPolygon where
   pl-len-odd {e} (_∷_ {pt x} .(pt e) {{e<>f}} {{e#f}} c) = ⊥-elim (A-pt#eq e#f e<>f)
   pl-len-odd {e} (_∷_ {ln x} .(pt e) {{e<>f}} {{e#f}} c) = evenOdd (ll-len-even c)
 
-  data _≈_ {e f} {prop : chain e f → Set} (c : Σ (chain e f) prop) : ( Σ (chain e f) prop) → Set where
-    refl : ∀ {p} → _≈_ c (proj₁ c , p)
-   
-  ≈-refl : ∀ {e f} {prop : chain e f → Set} → Reflexive (_≈_ {e} {f} {prop})
-  ≈-refl = refl
-
-  ≈-sym :  ∀ {e f} {prop : chain e f → Set} → Symmetric (_≈_ {e} {f} {prop})
-  ≈-sym refl = refl
-
-  ≈-trans : ∀ {e f} {prop : chain e f → Set} → Transitive (_≈_ {e} {f} {prop})
-  ≈-trans refl refl = refl
-
-  ≈-equiv : ∀ {e f} {prop : chain e f → Set} → IsEquivalence (_≈_ {e} {f} {prop}) 
-  ≈-equiv {e} {f} {prop} = record { refl = ≈-refl ; sym = ≈-sym; trans = ≈-trans }
 
   ChainsWithProperty : ∀ {e f} (prop : chain e f → Set) → Set
   ChainsWithProperty {e} {f} prop = Σ (chain e f) prop
 
   ChainsWithPropertySetoid : ∀ {e f} (prop : chain e f → Set)  → Setoid _ _
-  ChainsWithPropertySetoid prop = record { Carrier = ChainsWithProperty prop; _≈_ = _≈_; isEquivalence = ≈-equiv }
- 
-  chains≡⇒≈ : ∀ {e f} {prop : chain e f → Set} {c c' : Σ (chain e f) prop} →
-                                               (proj₁ c) ≡ proj₁ c' → c ≈ c'
-  chains≡⇒≈ {_} {_} {_} {(._ , _)} {(_ , _)} refl = refl
+  ChainsWithPropertySetoid prop = record { Carrier = ChainsWithProperty prop; _≈_ = λ a b → (proj₁ a) ≡ (proj₁ b);
+                                           isEquivalence = record { refl = refl; sym = sym; trans = trans } }
+
+  _≈_ : ∀ {e f} {prop : chain e f → Set} (c c' : Σ (chain e f) prop) → Set
+  _≈_ {prop = prop} = Setoid._≈_ (ChainsWithPropertySetoid prop)
 
   -- A₂ : There exists at most one irreducible chain of length less than n from e to f
   postulate
